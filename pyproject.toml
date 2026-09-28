@@ -1,0 +1,58 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "nate-nge-studio"
+version = "0.1.0"
+description = "NGE-STUDIO: Windows desktop shell for NGE2 game scripts"
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+authors = [{ name = "nate" }]
+dependencies = [
+    "PySide6>=6.6",
+    "nate-game-engine",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+    "pytest-qt>=4.4",
+    "ruff>=0.9",
+    "pyinstaller>=6.0",
+]
+
+[project.scripts]
+nge-studio = "nge_studio.app:main"
+nge-studio-validate = "nge_studio.catalog.cli:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/nge_studio"]
+
+[tool.hatch.build.targets.wheel.force-include]
+"game_scripts" = "game_scripts"
+
+[tool.uv.sources]
+nate-game-engine = { path = "../nate-game-engine", editable = true }
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src", "tests"]
+qt_api = "pyside6"
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+ignore = ["BLE001", "S110", "RUF100", "TRY004"]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.0",
+    "pytest-qt>=4.4",
+    "ruff>=0.9",
+    "pyinstaller>=6.0",
+]
