@@ -17,6 +17,14 @@ QTreeWidget, QPlainTextEdit, QLineEdit, QSpinBox, QDoubleSpinBox, QComboBox, QTe
   padding: 4px 6px;
   selection-background-color: #1f6feb;
 }
+QHeaderView::section {
+  background-color: #152238;
+  color: #e6edf7;
+  border: none;
+  border-bottom: 1px solid #243049;
+  padding: 6px 8px;
+  font-weight: 600;
+}
 QTreeWidget::item:selected {
   background-color: #1f6feb;
 }
