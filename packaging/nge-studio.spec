@@ -3,17 +3,44 @@
 
 from pathlib import Path
 
+from PyInstaller.utils.hooks import (
+    collect_all,
+    collect_data_files,
+    collect_dynamic_libs,
+)
+
 block_cipher = None
-root = Path(SPECPATH).resolve().parent  # packaging/ → repo root is parent? 
-# SPECPATH is packaging/ when running from packaging/nge-studio.spec
 repo = Path(SPECPATH).resolve().parent
+
+datas = [(str(repo / "game_scripts"), "game_scripts")]
+binaries = []
+hiddenimports = [
+    "nge2",
+    "PySide6",
+    "rapidocr_onnxruntime",
+    "onnxruntime",
+    "cv2",
+    "numpy",
+]
+
+# RapidOCR ships config.yaml + ONNX models as package data (not auto-detected).
+datas += collect_data_files("rapidocr_onnxruntime")
+# onnxruntime / OpenCV native bits commonly needed by NGE2 vision stack
+binaries += collect_dynamic_libs("onnxruntime")
+try:
+    tmp_ret = collect_all("onnxruntime")
+    datas += tmp_ret[0]
+    binaries += tmp_ret[1]
+    hiddenimports += tmp_ret[2]
+except Exception:
+    pass
 
 a = Analysis(
     [str(repo / "src" / "nge_studio" / "__main__.py")],
     pathex=[str(repo / "src")],
-    binaries=[],
-    datas=[(str(repo / "game_scripts"), "game_scripts")],
-    hiddenimports=["nge2", "PySide6"],
+    binaries=binaries,
+    datas=datas,
+    hiddenimports=hiddenimports,
     hookspath=[],
     hooksconfig={},
     runtime_hooks=[],
@@ -33,7 +60,7 @@ exe = EXE(
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,
-    upx=True,
+    upx=False,
     console=False,
     disable_windowed_traceback=False,
     argv_emulation=False,
@@ -47,7 +74,7 @@ coll = COLLECT(
     a.zipfiles,
     a.datas,
     strip=False,
-    upx=True,
+    upx=False,
     upx_exclude=[],
     name="NGE-STUDIO",
 )

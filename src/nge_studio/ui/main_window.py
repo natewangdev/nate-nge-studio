@@ -118,11 +118,14 @@ class MainWindow(QMainWindow):
         self.btn_start.clicked.connect(self._on_start_clicked)
         self.btn_pause.clicked.connect(self._on_pause_clicked)
         self.btn_stop.clicked.connect(self._on_stop_clicked)
-        self.log_line.connect(self.logs.append_line)
-        self.state_changed.connect(self._on_state)
-        self.run_error.connect(self._show_error)
-        self.run_hung.connect(lambda: self._show_error("脚本在结束宽限期内未返回，可能已挂起"))
-        self.run_finished.connect(self._on_run_finished)
+        self.log_line.connect(self.logs.append_line, Qt.ConnectionType.QueuedConnection)
+        self.state_changed.connect(self._on_state, Qt.ConnectionType.QueuedConnection)
+        self.run_error.connect(self._show_error, Qt.ConnectionType.QueuedConnection)
+        self.run_hung.connect(
+            lambda: self._show_error("脚本在结束宽限期内未返回，可能已挂起"),
+            Qt.ConnectionType.QueuedConnection,
+        )
+        self.run_finished.connect(self._on_run_finished, Qt.ConnectionType.QueuedConnection)
 
         self._load_catalog()
         if warn:
@@ -267,6 +270,7 @@ class MainWindow(QMainWindow):
         self._persist_selected_params()
         self.logs.clear()
         self._attach_log_handler()
+        logging.getLogger("nge.studio").info("正在启动脚本: %s", self._selected.key)
         try:
             self.runner.start(self._selected, params)
         except Exception as exc:

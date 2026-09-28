@@ -5,6 +5,15 @@ from nge_studio.logging_bridge.qt_handler import (
     QtLogHandler,
     attach_nge_handler,
     detach_handler,
+    restore_nge_handlers,
+    snapshot_nge_handlers,
 )
 
-__all__ = ["LogBuffer", "QtLogHandler", "attach_nge_handler", "detach_handler"]
+__all__ = [
+    "LogBuffer",
+    "QtLogHandler",
+    "attach_nge_handler",
+    "detach_handler",
+    "restore_nge_handlers",
+    "snapshot_nge_handlers",
+]
