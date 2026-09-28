@@ -4,16 +4,21 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass, field
-from typing import Any
+from typing import TYPE_CHECKING, Any
+
+if TYPE_CHECKING:
+    from nge2 import NGE2
+
+    from nge_studio.runner.context import RunContext
 
 
 @dataclass
 class RuleContext:
     """Per-tick context passed to rule functions."""
 
-    engine: Any
+    engine: NGE2
     state: dict[str, Any]
-    studio: Any  # RunContext
+    studio: RunContext
 
 
 RuleFn = Callable[[RuleContext], bool]

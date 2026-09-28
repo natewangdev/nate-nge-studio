@@ -3,9 +3,14 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
+from typing import TYPE_CHECKING
 
 from nge_studio.rules import RuleContext, RuleLoop
+
+if TYPE_CHECKING:
+    from nge2 import NGE2
+
+    from nge_studio.runner.context import RunContext
 
 log = logging.getLogger("nge.diablo4.test")
 
@@ -22,10 +27,7 @@ def click_bag_close(rctx: RuleContext) -> bool:
     """Find bag-close icon and left-click its center."""
     engine = rctx.engine
     find = engine.find
-    control = getattr(engine, "control", None)
-    if find is None or control is None:
-        log.warning("click_bag_close: engine 缺少 find/control")
-        return False
+    control = engine.control
     try:
         match = find.find_image(BAG_CLOSE_TEMPLATE, threshold=0.85)
     except Exception as exc:
@@ -52,17 +54,14 @@ def click_bag_close(rctx: RuleContext) -> bool:
 def town_press_i(rctx: RuleContext) -> bool:
     """OCR town strip; if text is 基奥瓦沙, press i."""
     engine = rctx.engine
-    ocr = getattr(engine, "ocr", None)
-    control = getattr(engine, "control", None)
-    if ocr is None or control is None:
-        log.warning("town_press_i: engine 缺少 ocr/control")
-        return False
+    ocr = engine.ocr
+    control = engine.control
     try:
         lines = ocr.recognize(region=TOWN_OCR_REGION, min_score=0.4)
     except Exception as exc:
         log.warning("town_press_i: OCR 失败: %s", exc)
         return False
-    texts = [str(getattr(ln, "text", "")).strip() for ln in lines]
+    texts = [str(ln.text).strip() for ln in lines]
     hit = any(t == TOWN_NAME or TOWN_NAME in t for t in texts if t)
     if not hit:
         if texts:
@@ -77,7 +76,7 @@ def town_press_i(rctx: RuleContext) -> bool:
     return True
 
 
-def run(engine: Any, ctx: Any) -> None:
+def run(engine: NGE2, ctx: RunContext) -> None:
     log.info("暗黑破坏神IV 测试脚本启动 (engine=%s)", type(engine).__name__)
     loop.state.clear()
     loop.run(engine, ctx)
