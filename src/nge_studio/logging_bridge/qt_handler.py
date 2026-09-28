@@ -50,12 +50,28 @@ class QtLogHandler(logging.Handler):
 
 
 def attach_nge_handler(handler: logging.Handler) -> None:
+    """Attach handler to the ``nge`` root without wiping other handlers."""
     root = logging.getLogger("nge")
-    root.addHandler(handler)
-    if root.level == logging.NOTSET:
+    if handler not in root.handlers:
+        root.addHandler(handler)
+    if root.level == logging.NOTSET or root.level > logging.INFO:
         root.setLevel(logging.INFO)
+    root.propagate = False
 
 
 def detach_handler(handler: logging.Handler) -> None:
     root = logging.getLogger("nge")
     root.removeHandler(handler)
+
+
+def snapshot_nge_handlers() -> list[logging.Handler]:
+    return list(logging.getLogger("nge").handlers)
+
+
+def restore_nge_handlers(handlers: list[logging.Handler]) -> None:
+    """Re-add handlers that NGE2 ``_configure_root`` may have cleared."""
+    root = logging.getLogger("nge")
+    for handler in handlers:
+        if handler not in root.handlers:
+            root.addHandler(handler)
+    root.propagate = False

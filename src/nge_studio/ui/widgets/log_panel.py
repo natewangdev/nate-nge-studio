@@ -20,7 +20,7 @@ class LogPanel(QWidget):
         layout.addWidget(self._view)
 
     def append_line(self, line: str) -> None:
-        self.buffer.append(line)
+        # Handler may already have buffered; UI view is source of truth for display.
         self._view.appendPlainText(line)
         self._view.moveCursor(QTextCursor.MoveOperation.End)
 

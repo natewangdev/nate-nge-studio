@@ -114,7 +114,9 @@ if ($LASTEXITCODE -ne 0) { throw "catalog invalid" }
 uv run pyinstaller --noconfirm packaging/nge-studio.spec
 ```
 
-产物目录：`dist/NGE-STUDIO/`（onedir）。其中嵌入 `game_scripts/`。源码中新增脚本后需重新打包才会出现在该构建的界面目录中。
+产物目录：`dist/NGE-STUDIO/`（onedir）。其中嵌入 `game_scripts/`，并通过 `collect_data_files` 打入 `rapidocr_onnxruntime` 的 `config.yaml` / 模型等数据（否则引擎构造 OCR 会报找不到 config）。源码中新增脚本后需重新打包才会出现在该构建的界面目录中。
+
+**说明**：打包 exe 启动脚本时仍会走完整 `NGE2` 构造（OCR / YOLO / HID）。冒烟示例若未准备 `models/yolo.onnx` 或本机无 ESP32-S3，可能在 OCR 修复后继续在 YOLO/串口步骤失败——这属于引擎运行环境，而非目录发现问题。
 
 ## 测试
 
