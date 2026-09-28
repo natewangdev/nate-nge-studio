@@ -127,4 +127,7 @@ uv run ruff check src tests
 
 ## Spec Kit
 
-本仓库使用 Spec Kit（Cursor / `cursor-agent`）。功能规格见 `specs/001-nge-studio-mvp/`。
+本仓库使用 Spec Kit（Cursor / `cursor-agent`）。
+
+- MVP 外壳：`specs/001-nge-studio-mvp/`
+- 脚本 Rule 辅助库（priority / cooldown 循环，生命周期仍归 Studio）：见 `specs/002-script-rules/` 与契约 [`rule-helper.md`](specs/002-script-rules/contracts/rule-helper.md)
