@@ -72,9 +72,15 @@ Chinese companion: [`research.zh-CN.md`](./research.zh-CN.md).
 
 ## 12. Parameter surface & `ocr_kwargs`
 
-- **Decision**: Form fields for all author-facing NGE2 ctor params listed in the spec; factory hooks omitted. `ocr_kwargs` as JSON text field validated on Start. `hwnd` optional. Studio `run_duration_sec` optional float/int seconds (empty = disabled).
-- **Rationale**: Spec FR-005 + assumptions.
-- **Alternatives considered**: Nested OCR form — deferred; require hwnd — rejected in clarify.
+- **Decision**: Form fields for all author-facing NGE2 ctor params listed in the spec; factory hooks omitted. `ocr_kwargs` as JSON text field validated on Start (**no** file browse). `hwnd` optional. Studio timeout is stored as `run_duration_sec` but **edited in the UI as hours** (empty = disabled; non-integers allowed).
+- **Rationale**: Spec FR-005 / FR-005d + assumptions; keeps settings/manifest backward compatible.
+- **Alternatives considered**: Nested OCR form — deferred; require hwnd — rejected in clarify; rename persist field to hours — rejected (Option A keep seconds).
+
+## 12b. Path browse UX
+
+- **Decision**: Folder browse for `resource_dir` and `log_dir`; file browse for `yolo_model` / `yolo_names` with suggested filters (`*.onnx`, `*.names`/`*.txt`, plus All files). Dialogs start at `resource_dir` when it exists, else user home. Picked paths under `resource_dir` are stored relative; otherwise absolute. Window-pick and Browse buttons match adjacent input height.
+- **Rationale**: Spec FR-005a–e clarifications (2026-09-28).
+- **Alternatives considered**: Always absolute paths; OCR kwargs JSON file import — rejected.
 
 ## 13. Testing without hardware
 

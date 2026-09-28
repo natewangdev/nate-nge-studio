@@ -45,11 +45,12 @@ uv run python -m nge_studio
 **Expected**:
 
 1. Main window opens (Simplified Chinese labels); catalog shows **冒烟示例** (or `smoke`) under `demo`.
-2. Select script → form shows manifest defaults; `hwnd` may be empty; Start still enabled.
-3. Window pick: clicking Studio itself is rejected with a prompt; picking another top-level window fills hwnd + title.
-4. With fake/mock or real engine per environment: Start → logs appear live; Pause halts progress; Start/F9 resumes; Stop returns idle and keeps log lines; Start again clears/replaces logs.
-5. Change hotkeys in settings, restart app → new bindings work; defaults were F9/F10/F11.
-6. Second Start while running is refused with a clear message.
+2. Select script → form shows manifest defaults; `hwnd` may be empty; Start still enabled; run duration label/unit is **hours**.
+3. Window pick: clicking Studio itself is rejected with a prompt; picking another top-level window fills hwnd + title; pick button height matches the hwnd input.
+4. Browse: folder pick for `resource_dir` / `log_dir`; file pick for YOLO model/names (starts at `resource_dir` or home); relative path when under `resource_dir`; `ocr_kwargs` has no browse button.
+5. With fake/mock or real engine per environment: Start → logs appear live; Pause halts progress; Start/F9 resumes; Stop returns idle and keeps log lines; Start again clears/replaces logs.
+6. Change hotkeys in settings, restart app → new bindings work; defaults were F9/F10/F11.
+7. Second Start while running is refused with a clear message.
 
 ## Packaging validation
 

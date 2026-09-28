@@ -37,7 +37,7 @@ File: `game_scripts/<game_id>/<script_id>/manifest.json` (UTF-8 JSON object).
 | `defaults.capture` | no | Only `"dxcam"` or `"mss"` if present |
 | `defaults.hwnd` | no | `null` or non-negative int |
 | `defaults.ocr_kwargs` | no | `null` or JSON object (not a string) |
-| `defaults.run_duration_sec` | no | `null` or number &gt; 0 |
+| `defaults.run_duration_sec` | no | `null` or number &gt; 0 (seconds). UI edits this as hours (`× 3600`). |
 
 ## Validation outcomes
 
