@@ -50,11 +50,18 @@
 | capture | `"dxcam"` \| `"mss"` | 默认 `"dxcam"` |
 | humanize | bool | 默认 `true` |
 | control_mode | int | 默认 `2`；非法值在引擎构造时失败 |
-| log_dir | str/path \| null | 可选 |
-| yolo_model | str/path | 默认按 NGE2 |
-| yolo_names | str/path \| null | 默认按 NGE2 |
-| ocr_kwargs | object \| null | JSON 对象；非法 JSON 启动校验失败 |
-| run_duration_sec | number \| null | 仅 Studio；null/省略/≤0 → 无超时；&gt;0 → 到期结束 |
+| log_dir | str/path \| null | 可选；UI 支持手输或文件夹选择 |
+| yolo_model | str/path | 默认按 NGE2（`models/yolo.onnx`）；UI 支持手输或文件选择 |
+| yolo_names | str/path \| null | 默认按 NGE2；UI 支持手输或文件选择 |
+| ocr_kwargs | object \| null | JSON 对象；非法 JSON 启动校验失败；**无**文件选择 |
+| run_duration_sec | number \| null | 仅 Studio 的规范存储（秒）；null/省略/≤0 → 无超时；&gt;0 → 到期结束。**UI 以小时编辑**（小时 × 3600 ↔ `run_duration_sec`） |
+
+**路径选择规则**（仅 UI）：
+
+- 文件夹选择：`resource_dir`、`log_dir`。
+- 文件选择：`yolo_model`（建议 `*.onnx` + 所有文件）、`yolo_names`（建议 `*.names`/`*.txt` + 所有文件）。
+- 对话框起始目录：当前 `resource_dir` 非空且存在时用其；否则用户主目录。
+- 选择后：若路径位于 `resource_dir` 下则存相对路径；否则存绝对路径。
 
 ### LaunchConfiguration（持久化覆盖）
 

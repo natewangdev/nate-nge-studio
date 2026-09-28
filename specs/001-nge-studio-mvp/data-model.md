@@ -50,11 +50,18 @@ Author-facing NGE2 construction fields + Studio timeout.
 | capture | `"dxcam"` \| `"mss"` | Default `"dxcam"` |
 | humanize | bool | Default `true` |
 | control_mode | int | Default `2`; UI may still expose; invalid values fail at engine construct |
-| log_dir | str/path \| null | Optional |
-| yolo_model | str/path | Default per NGE2 (`models/yolo.onnx`) |
-| yolo_names | str/path \| null | Default per NGE2 |
-| ocr_kwargs | object \| null | JSON object; invalid JSON fails Start validation |
-| run_duration_sec | number \| null | Studio-only; null/omitted/≤0 → no timeout; &gt;0 → stop after seconds |
+| log_dir | str/path \| null | Optional; UI supports type-in or folder browse |
+| yolo_model | str/path | Default per NGE2 (`models/yolo.onnx`); UI supports type-in or file browse |
+| yolo_names | str/path \| null | Default per NGE2; UI supports type-in or file browse |
+| ocr_kwargs | object \| null | JSON object; invalid JSON fails Start validation; **no** file browse |
+| run_duration_sec | number \| null | Studio-only canonical store (seconds); null/omitted/≤0 → no timeout; &gt;0 → stop after seconds. **UI edits hours** (`hours × 3600` ↔ `run_duration_sec`) |
+
+**Path browse rules** (UI only):
+
+- Folder browse: `resource_dir`, `log_dir`.
+- File browse: `yolo_model` (suggested `*.onnx` + All files), `yolo_names` (suggested `*.names`/`*.txt` + All files).
+- Dialog start directory: current `resource_dir` if non-empty and exists; else user home.
+- After pick: store path relative to `resource_dir` when under that directory; else absolute.
 
 ### LaunchConfiguration (persisted overlay)
 

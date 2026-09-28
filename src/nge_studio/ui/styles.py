@@ -35,6 +35,15 @@ QPushButton {
   padding: 6px 14px;
   min-height: 28px;
 }
+QPushButton#rowButton {
+  min-height: 0;
+  max-height: 28px;
+  padding: 4px 10px;
+}
+QLineEdit {
+  min-height: 20px;
+  max-height: 28px;
+}
 QPushButton:hover {
   background-color: #1c2e4a;
   border-color: #3d6ea8;

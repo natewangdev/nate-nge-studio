@@ -37,7 +37,7 @@
 | `defaults.capture` | 否 | 若存在仅允许 `"dxcam"` 或 `"mss"` |
 | `defaults.hwnd` | 否 | `null` 或非负整数 |
 | `defaults.ocr_kwargs` | 否 | `null` 或 JSON 对象（非字符串） |
-| `defaults.run_duration_sec` | 否 | `null` 或 &gt; 0 的数字 |
+| `defaults.run_duration_sec` | 否 | `null` 或 &gt; 0 的数字（秒）。UI 以小时编辑（× 3600）。 |
 
 ## 校验结果
 
