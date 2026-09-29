@@ -28,6 +28,7 @@ Create parent directory on first save. If the file is missing, use built-in defa
       "parameters": {
         "resource_dir": ".",
         "hwnd": 123456,
+        "window_title": "Diablo",
         "capture": "dxcam",
         "humanize": true,
         "control_mode": 2,

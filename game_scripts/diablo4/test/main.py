@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 from nge_studio.rules import RuleContext, RuleLoop
@@ -18,6 +19,15 @@ log = logging.getLogger("nge.diablo4.test")
 TOWN_OCR_REGION = (1344, 2, 1514, 31)
 BAG_CLOSE_TEMPLATE = "images/背包关闭.png"
 TOWN_NAME = "基奥瓦沙"
+
+
+@dataclass
+class DiabloTestFSM:
+    """Placeholder FSM for RuleLoop (extend with phase fields as needed)."""
+
+    bag_clicks: int = 0
+    town_presses: int = 0
+
 
 loop = RuleLoop(one_action_per_tick=True, tick_interval_sec=0.25)
 
@@ -41,6 +51,7 @@ def click_bag_close(rctx: RuleContext) -> bool:
     except Exception as exc:
         log.warning("click_bag_close: 点击失败: %s", exc)
         return False
+    rctx.state.bag_clicks += 1
     log.info(
         "click_bag_close: 点击 (%.0f, %.0f) score=%.3f",
         match.x,
@@ -72,12 +83,12 @@ def town_press_i(rctx: RuleContext) -> bool:
     except Exception as exc:
         log.warning("town_press_i: 按键 i 失败: %s", exc)
         return False
+    rctx.state.town_presses += 1
     log.info("town_press_i: 识别到「%s」，已按 i（OCR=%s）", TOWN_NAME, texts)
     return True
 
 
 def run(engine: NGE2, ctx: RunContext) -> None:
     log.info("暗黑破坏神IV 测试脚本启动 (engine=%s)", type(engine).__name__)
-    loop.state.clear()
-    loop.run(engine, ctx)
+    loop.run(engine, ctx, state=DiabloTestFSM())
     log.info("暗黑破坏神IV 测试脚本结束")

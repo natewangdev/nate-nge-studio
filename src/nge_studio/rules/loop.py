@@ -7,7 +7,7 @@ import time
 from collections.abc import Callable
 from typing import Any
 
-from nge_studio.rules.models import Rule, RuleContext, RuleFn
+from nge_studio.rules.models import Rule, RuleContext, RuleFn, require_dataclass_fsm
 from nge_studio.runner.context import ScriptStopped
 
 log = logging.getLogger("nge.studio.rules")
@@ -26,7 +26,7 @@ class RuleLoop:
             raise ValueError("tick_interval_sec must be >= 0")
         self.one_action_per_tick = bool(one_action_per_tick)
         self.tick_interval_sec = float(tick_interval_sec)
-        self.state: dict[str, Any] = {}
+        self.state: Any | None = None
         self._rules: list[Rule] = []
 
     def add_rule(
@@ -59,8 +59,9 @@ class RuleLoop:
 
         return decorator
 
-    def run(self, engine: Any, studio_ctx: Any) -> None:
-        """Block until Studio stop; honor pause via ``checkpoint`` each tick."""
+    def run(self, engine: Any, studio_ctx: Any, *, state: Any) -> None:
+        """Block until Studio stop; ``state`` must be a ``@dataclass`` instance."""
+        self.state = require_dataclass_fsm(state)
         for rule in self._rules:
             rule._last_fired = None
         log.info(

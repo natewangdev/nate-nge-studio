@@ -9,11 +9,16 @@ This is the contract between NGE-STUDIO and each catalog script.
 ## Layout
 
 ```text
-game_scripts/<game_id>/<script_id>/
-  manifest.json    # required — see manifest-schema.md
-  main.py          # required — must define run()
-  ...              # optional resources referenced by parameters
+game_scripts/<game_id>/
+  common.py          # optional — shared helpers for this game (not a catalog script)
+  rules.py           # optional — shared rules for this game (not a catalog script)
+  <script_id>/
+    manifest.json    # required — see manifest-schema.md
+    main.py          # required — must define run()
+    ...              # optional resources referenced by parameters
 ```
+
+Catalog discovery walks **only** `<game_id>/<script_id>/` directories. Files `common.py` / `rules.py` at the game level MUST NOT be treated as scripts. When loading a script, Studio MUST put the game directory on `sys.path` (or equivalent) so `import common` / `import rules` work from `main.py`.
 
 ## Entry point
 

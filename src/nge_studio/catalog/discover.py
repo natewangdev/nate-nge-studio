@@ -42,7 +42,9 @@ def discover_catalog(root: Path | None = None, *, validate: bool = True) -> list
     for game_dir in sorted(p for p in catalog_root.iterdir() if p.is_dir() and not p.name.startswith(".")):
         scripts: list[Script] = []
         for script_dir in sorted(
-            p for p in game_dir.iterdir() if p.is_dir() and not p.name.startswith(".")
+            p
+            for p in game_dir.iterdir()
+            if p.is_dir() and not p.name.startswith(".") and p.name != "__pycache__"
         ):
             if validate:
                 manifest = validate_script_dir(script_dir)

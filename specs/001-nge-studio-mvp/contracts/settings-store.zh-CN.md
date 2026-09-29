@@ -28,6 +28,7 @@
       "parameters": {
         "resource_dir": ".",
         "hwnd": 123456,
+        "window_title": "Diablo",
         "capture": "dxcam",
         "humanize": true,
         "control_mode": 2,

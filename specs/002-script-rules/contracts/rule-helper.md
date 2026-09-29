@@ -10,26 +10,23 @@ Author-facing API for catalog scripts. Complements (does not replace) MVP
 ## Import
 
 ```python
+from dataclasses import dataclass
 from nge_studio.rules import RuleLoop, RuleContext
-```
 
-## RuleLoop
+@dataclass
+class SmokeFSM:
+    beats: int = 0
+    last_grab_ok: bool = False
 
-```python
-loop = RuleLoop(
-    one_action_per_tick=True,   # default
-    tick_interval_sec=0.1,      # default; no jitter
-)
+loop = RuleLoop(one_action_per_tick=True, tick_interval_sec=0.1)
 
 @loop.rule(name="probe", priority=10, cooldown=1.0)
 def probe(rctx: RuleContext) -> bool:
-    ...
-    return True  # acted
-
-# or: loop.add_rule(fn, name=..., priority=..., cooldown=...)
+    rctx.state.beats += 1
+    return True
 
 def run(engine, ctx):
-    loop.run(engine, ctx)  # blocks until stop; honors pause via checkpoint
+    loop.run(engine, ctx, state=SmokeFSM())
 ```
 
 ### Guarantees
@@ -42,6 +39,7 @@ def run(engine, ctx):
 | Priority | Higher `priority` evaluated first |
 | one_action_per_tick | After first `True`, remaining rules skipped that tick |
 | Exceptions | Logged; rule treated as non-acting; remaining rules that tick skipped |
+| State | **Required** `@dataclass` FSM via `run(..., state=...)`; `rctx.state.field` access; **dict rejected** |
 | Omitted | `session_max_seconds`, tick jitter, `break_every` |
 
 ### RuleContext
@@ -49,7 +47,7 @@ def run(engine, ctx):
 | Attr | Meaning |
 |------|---------|
 | `engine` | NGE2 instance (or test fake) |
-| `state` | Shared `dict` for the run |
+| `state` | Author `@dataclass` FSM for the run |
 | `studio` | Studio `RunContext` |
 
 ## Non-goals

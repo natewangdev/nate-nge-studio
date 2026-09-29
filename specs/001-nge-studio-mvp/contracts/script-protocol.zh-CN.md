@@ -9,11 +9,16 @@
 ## 布局
 
 ```text
-game_scripts/<game_id>/<script_id>/
-  manifest.json    # 必需 — 见 manifest-schema.md
-  main.py          # 必需 — 必须定义 run()
-  ...              # 参数可能引用的可选资源
+game_scripts/<game_id>/
+  common.py          # 可选 — 本游戏共享方法（不是目录脚本）
+  rules.py           # 可选 — 本游戏共享规则（不是目录脚本）
+  <script_id>/
+    manifest.json    # 必需 — 见 manifest-schema.md
+    main.py          # 必需 — 必须定义 run()
+    ...              # 参数可能引用的可选资源
 ```
+
+目录发现**仅**遍历 `<game_id>/<script_id>/` 文件夹。游戏级 `common.py` / `rules.py` **不得**当作脚本。加载脚本时，Studio **必须**将游戏目录加入 `sys.path`（或等价方式），以便 `main.py` 可 `import common` / `import rules`。
 
 ## 入口
 
