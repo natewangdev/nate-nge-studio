@@ -81,7 +81,11 @@ def validate_catalog_tree(root: Path) -> list[tuple[str, str]]:
         raise CatalogValidationError(root, "目录根不存在")
     passed: list[tuple[str, str]] = []
     for game_dir in sorted(p for p in root.iterdir() if p.is_dir() and not p.name.startswith(".")):
-        script_dirs = [p for p in game_dir.iterdir() if p.is_dir() and not p.name.startswith(".")]
+        script_dirs = [
+            p
+            for p in game_dir.iterdir()
+            if p.is_dir() and not p.name.startswith(".") and p.name != "__pycache__"
+        ]
         if not script_dirs:
             continue
         for script_dir in sorted(script_dirs):

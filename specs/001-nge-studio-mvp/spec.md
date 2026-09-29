@@ -33,6 +33,13 @@
 - Q: If `resource_dir` is empty/invalid when opening a picker, where should the dialog start? → A: Fall back to the user home directory (Option A).
 - Q: UI run duration in hours — change persisted field? → A: Keep storing `run_duration_sec`; UI edits hours and converts (`hours × 3600`) on read/write (Option A).
 
+### Session 2026-09-30
+
+- Q: Window title vs hwnd when both set? → A: If hwnd is set, construct NGE2 with hwnd (title does not override). If only `window_title` is set, resolve the first match via NGE2 `find_by_title` (substring, case-insensitive) and bind that hwnd (Option A matching + hwnd precedence).
+- Q: `window_title` set but no matching window? → A: Start MUST fail with a clear UI error; do not enter running / unbound fallback (Option A).
+- Q: After a bound hwnd is obtained, activate window? → A: Yes — after successful NGE2 construct, call `engine.window.activate()` before invoking `run`.
+- Q: Game-level shared code layout? → A: Fixed files `game_scripts/<game_id>/common.py` (helpers) and `rules.py` (shared rules); not catalog scripts; demo shows usage (Option A). Spec updates land in existing `001`/`002` (no new feature number).
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - Browse packaged games and scripts (Priority: P1)
@@ -62,9 +69,9 @@ After selecting a script, the operator configures NGE2 launch parameters (full c
 
 **Acceptance Scenarios**:
 
-1. **Given** a selected script, **When** the operator views launch settings, **Then** the UI exposes the full documented NGE2 construction parameter set needed by authors (`resource_dir`, `hwnd`, `capture`, `humanize`, `control_mode`, `log_dir`, `yolo_model`, `yolo_names`, `ocr_kwargs`) plus a Studio-owned run-duration timeout shown in **hours**.
+1. **Given** a selected script, **When** the operator views launch settings, **Then** the UI exposes the full documented NGE2 construction parameter set needed by authors (`resource_dir`, `hwnd`, `window_title`, `capture`, `humanize`, `control_mode`, `log_dir`, `yolo_model`, `yolo_names`, `ocr_kwargs`) plus a Studio-owned run-duration timeout shown in **hours**.
 2. **Given** the script manifest provides default parameter values, **When** the operator first selects the script (or resets to defaults), **Then** those defaults populate the form (run duration displayed as hours when `run_duration_sec` is set).
-3. **Given** the operator activates window pick mode, **When** they select a visible top-level window that is not Studio itself, **Then** the corresponding window handle is written into the hwnd field and a recognizable window title/label is shown.
+3. **Given** the operator activates window pick mode, **When** they select a visible top-level window that is not Studio itself, **Then** the corresponding window handle is written into the hwnd field and a recognizable window title/label is shown (title MAY also populate `window_title`).
 4. **Given** the operator activates window pick mode, **When** they attempt to select NGE-STUDIO’s own window, **Then** the selection is rejected, hwnd is not changed to Studio’s handle, and the operator is prompted to choose another window.
 5. **Given** the operator sets a positive run-duration timeout in hours (including non-integers such as `0.5`), **When** a run exceeds that duration, **Then** Studio stops the run using the same stop path as manual stop (cancel + engine close).
 6. **Given** the operator leaves run-duration empty/disabled, **When** a script runs, **Then** Studio does not stop it solely due to elapsed time.
@@ -73,6 +80,9 @@ After selecting a script, the operator configures NGE2 launch parameters (full c
 9. **Given** a valid `resource_dir`, **When** the operator uses Browse on `yolo_model` or `yolo_names`, **Then** a file dialog opens starting at `resource_dir` (suggested filters `*.onnx` / `*.names`+`*.txt` plus All files), and the chosen path is written relative to `resource_dir` when under that directory, otherwise absolute; `ocr_kwargs` remains JSON text **without** a file Browse control.
 10. **Given** `resource_dir` is empty or not an existing directory, **When** the operator opens any path browse dialog that would start at `resource_dir`, **Then** the dialog starts at the user home directory instead.
 11. **Given** the launch parameter form is visible, **When** the operator compares the window-pick button and path-browse buttons to their row inputs, **Then** those buttons share the same control height as the adjacent input fields.
+12. **Given** only `window_title` is set and at least one visible top-level window title contains that string, **When** the operator presses Start, **Then** Studio binds the first match’s hwnd, constructs NGE2 with it, activates the window, then runs the script.
+13. **Given** only `window_title` is set and no window matches, **When** the operator presses Start, **Then** Start fails with a clear error and no run starts.
+14. **Given** both `hwnd` and `window_title` are set, **When** the operator presses Start, **Then** Studio constructs NGE2 using `hwnd` (title is not used for resolution) and activates that window before `run`.
 
 ---
 
@@ -137,6 +147,8 @@ A maintainer produces a Windows executable build of NGE-STUDIO that includes the
 - Hotkey conflict with another global hook: Studio reports registration failure and keeps previous binding or unbound state visibly.
 - Manifest present but malformed JSON/fields: entire package/build fails with a clear error that identifies the offending path.
 - Operator picks a window belonging to Studio itself: selection is rejected; hwnd is unchanged; operator is prompted to pick another window.
+- `window_title` set and no matching visible top-level window: Start fails with a clear error; no run session started.
+- Both `hwnd` and `window_title` set: hwnd is used for NGE2 construct; title is not used for resolution.
 
 ## Requirements *(mandatory)*
 
@@ -146,13 +158,15 @@ A maintainer produces a Windows executable build of NGE-STUDIO that includes the
 - **FR-002**: System MUST discover games/scripts from a conventional source tree of the form `game_scripts/<game_id>/<script_id>/` at build/package time (and in development via the same catalog rules used for packaging).
 - **FR-003**: Each script directory MUST include a `manifest` file and a unified entry module; packaging/catalog validation MUST fail the entire build if any discovered script directory violates the documented protocol or manifest rules (clear error naming the path).
 - **FR-004**: Manifest MUST support at least: display name, optional description, and optional default launch parameter values. Game ID and script ID MUST be the folder names.
-- **FR-005**: Selecting a script MUST allow configuring the full NGE2 construction parameter surface: `resource_dir`, `hwnd`, `capture`, `humanize`, `control_mode`, `log_dir`, `yolo_model`, `yolo_names`, `ocr_kwargs`, plus Studio run-duration timeout. `hwnd` MUST be optional; an empty hwnd MUST still allow Start, with NGE2 screen-absolute coordinate semantics.
+- **FR-005**: Selecting a script MUST allow configuring the full NGE2 construction parameter surface: `resource_dir`, `hwnd`, `window_title`, `capture`, `humanize`, `control_mode`, `log_dir`, `yolo_model`, `yolo_names`, `ocr_kwargs`, plus Studio run-duration timeout. `hwnd` and `window_title` MUST each be optional. When both are empty, Start MUST still be allowed with NGE2 screen-absolute coordinate semantics.
 - **FR-005a**: `resource_dir` and `log_dir` MUST each provide a text input and a Browse control that opens a **folder** dialog; values MAY also be typed manually.
 - **FR-005b**: `yolo_model` and `yolo_names` MUST each provide a text input and a Browse control that opens a **file** dialog (suggested filters: model `*.onnx`; names `*.names` and `*.txt`; plus All files). `ocr_kwargs` MUST remain editable JSON text and MUST NOT offer a file Browse control.
 - **FR-005c**: Path/file browse dialogs MUST start in the current `resource_dir` when that path is a non-empty existing directory; otherwise they MUST start in the user home directory. After a successful pick, if the chosen path is under `resource_dir`, the field MUST store a path relative to `resource_dir`; otherwise it MUST store an absolute path.
 - **FR-005d**: Studio run-duration MUST be edited in the UI as **hours** (non-integer values allowed, e.g. `0.5`). Persistence and the runner MUST continue to use `run_duration_sec` (seconds = hours × 3600). Empty/omitted/≤0 means no Studio timeout.
 - **FR-005e**: The window-pick button and path Browse buttons MUST match the visual height of their adjacent input fields on the same row.
-- **FR-006**: System MUST provide a visual window-picker to populate `hwnd` from a user-selected top-level window. Selecting NGE-STUDIO’s own window MUST be rejected with a clear prompt; hwnd MUST NOT be set to Studio’s handle.
+- **FR-005f**: Launch parameters MUST include optional `window_title` (string). Resolution before NGE2 construct: (1) if `hwnd` is set, use that hwnd; (2) else if `window_title` is non-empty, find visible top-level windows whose titles **contain** the query (case-insensitive, same semantics as NGE2 `Window.find_by_title`) and bind the **first** match’s hwnd; (3) else unbound. If (2) yields no matches, Start MUST fail with a clear UI error.
+- **FR-005g**: When NGE2 is constructed with a bound hwnd (from hwnd field or title resolution), Studio MUST call `engine.window.activate()` successfully before invoking script `run`. If activate fails, Start MUST fail with a clear error and close the engine.
+- **FR-006**: System MUST provide a visual window-picker to populate `hwnd` from a user-selected top-level window. Selecting NGE-STUDIO’s own window MUST be rejected with a clear prompt; hwnd MUST NOT be set to Studio’s handle. Window pick MAY also fill `window_title` with the picked window’s title for operator convenience.
 - **FR-007**: System MUST persist per-script last-used launch parameters and global hotkey bindings across application restarts on the same machine/user profile.
 - **FR-008**: System MUST support Start, cooperative Pause, and Stop for the active run via UI controls and via three configurable global hotkeys (defaults F9 / F10 / F11). While paused, the Start control and its hotkey MUST act as Resume (no separate Resume control required).
 - **FR-009**: System MUST allow at most one active script run at a time and refuse additional starts with a clear message.
@@ -163,6 +177,7 @@ A maintainer produces a Windows executable build of NGE-STUDIO that includes the
 - **FR-014**: System MUST depend on `nate-game-engine` / `nge2` via pip (editable local path and/or published package), not a vendored engine copy.
 - **FR-015**: System MUST be shippable as a Windows executable that includes the packaged script catalog for that build.
 - **FR-016**: Adding games/scripts in source MUST require rebuild/repackage before they appear in that build’s UI catalog.
+- **FR-017**: Under `game_scripts/<game_id>/`, optional files `common.py` (shared helpers) and `rules.py` (shared rules) MUST be supported for that game’s scripts. Catalog discovery MUST NOT treat these files as scripts. Studio MUST ensure scripts can import them (e.g. game directory on `sys.path` when loading `main`). `demo` MUST include a usage example.
 
 ### Key Entities
 
@@ -191,7 +206,8 @@ A maintainer produces a Windows executable build of NGE-STUDIO that includes the
 - Sample/demo game scripts sufficient for acceptance testing will be added in-repo under `game_scripts/`.
 - NGE2 remains the only supported engine; scripts do not embed alternate automation stacks.
 - “Full NGE2 construction parameters” means the documented public constructor fields intended for authors; internal factory hooks (`capture_factory`, `transport_factory`, `ocr_factory`, `yolo_factory`) are advanced/testing knobs and are **out of MVP UI** unless a later clarification includes them.
-- `hwnd` may be left empty at Start; behavior matches NGE2 unbound-window (screen-absolute) semantics.
+- `hwnd` and/or `window_title` may be left empty at Start; when both empty, behavior matches NGE2 unbound-window (screen-absolute) semantics. When only title is set, Studio resolves hwnd before construct; when hwnd is set, hwnd wins.
+- Game-level `common.py` / `rules.py` are author conventions for shared code within a game folder; they are not catalog entries.
 - `ocr_kwargs` is exposed as an advanced structured field (JSON text) rather than a large dedicated form or file picker in MVP.
 - Path browse UX (folders for `resource_dir`/`log_dir`, files for YOLO fields, relative-when-under-`resource_dir`, home fallback) applies only to the launch-parameter form; it does not change NGE2 constructor semantics.
 - Run-duration **display unit is hours**; the canonical stored field remains `run_duration_sec` in manifests and settings for backward compatibility.

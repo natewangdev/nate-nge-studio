@@ -7,6 +7,7 @@ from PyInstaller.utils.hooks import (
     collect_all,
     collect_data_files,
     collect_dynamic_libs,
+    collect_submodules,
 )
 
 block_cipher = None
@@ -14,6 +15,8 @@ repo = Path(SPECPATH).resolve().parent
 
 datas = [(str(repo / "game_scripts"), "game_scripts")]
 binaries = []
+# Author scripts import Studio APIs at runtime (e.g. nge_studio.rules); collect all
+# submodules so dynamically loaded main.py is not limited to the UI import graph.
 hiddenimports = [
     "nge2",
     "PySide6",
@@ -21,7 +24,7 @@ hiddenimports = [
     "onnxruntime",
     "cv2",
     "numpy",
-]
+] + collect_submodules("nge_studio")
 
 # RapidOCR ships config.yaml + ONNX models as package data (not auto-detected).
 datas += collect_data_files("rapidocr_onnxruntime")

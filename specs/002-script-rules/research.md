@@ -37,3 +37,9 @@
 - **Decision**: Public types `Rule`, `RuleContext`, `RuleLoop`. Method `RuleLoop.add_rule` + `@loop.rule` decorator optional convenience.
 - **Rationale**: Clear mapping from legacy Bot without claiming to be Bot.
 - **Alternatives considered**: Name `ScriptBot` — more confusion with legacy Bot.
+
+## 7. Dataclass FSM state (2026-09-30)
+
+- **Decision**: `RuleLoop.run(engine, studio_ctx, state=...)` **requires** an instance of an author `@dataclass`. `rctx.state` is that object (attribute access). Plain `dict` is rejected. Smoke and tests must use a dataclass FSM.
+- **Rationale**: Clarification Option B — typed FSM ergonomics (`rctx.state.xxx = value`).
+- **Alternatives considered**: Optional dict fallback for compatibility — rejected.

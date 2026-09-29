@@ -3,6 +3,6 @@
 from __future__ import annotations
 
 from nge_studio.rules.loop import RuleLoop
-from nge_studio.rules.models import Rule, RuleContext
+from nge_studio.rules.models import Rule, RuleContext, require_dataclass_fsm
 
-__all__ = ["Rule", "RuleContext", "RuleLoop"]
+__all__ = ["Rule", "RuleContext", "RuleLoop", "require_dataclass_fsm"]

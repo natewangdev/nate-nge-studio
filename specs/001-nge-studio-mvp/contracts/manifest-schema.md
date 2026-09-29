@@ -15,6 +15,7 @@ File: `game_scripts/<game_id>/<script_id>/manifest.json` (UTF-8 JSON object).
   "defaults": {
     "resource_dir": "string (optional)",
     "hwnd": null,
+    "window_title": null,
     "capture": "dxcam",
     "humanize": true,
     "control_mode": 2,
@@ -36,6 +37,7 @@ File: `game_scripts/<game_id>/<script_id>/manifest.json` (UTF-8 JSON object).
 | `defaults` | no | Object; unknown keys → validate **fail** (strict) |
 | `defaults.capture` | no | Only `"dxcam"` or `"mss"` if present |
 | `defaults.hwnd` | no | `null` or non-negative int |
+| `defaults.window_title` | no | `null` or string; title substring for resolve-when-hwnd-empty |
 | `defaults.ocr_kwargs` | no | `null` or JSON object (not a string) |
 | `defaults.run_duration_sec` | no | `null` or number &gt; 0 (seconds). UI edits this as hours (`× 3600`). |
 

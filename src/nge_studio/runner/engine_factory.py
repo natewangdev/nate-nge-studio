@@ -65,7 +65,6 @@ def create_nge2_engine(params: LaunchParameters, script_dir: Path) -> Any:
     kwargs: dict[str, Any] = {
         "resource_dir": resource,
         "capture": params.capture,
-        "hwnd": params.hwnd,
         "humanize": params.humanize,
         "control_mode": params.control_mode,
         "log_dir": log_path,
@@ -75,8 +74,23 @@ def create_nge2_engine(params: LaunchParameters, script_dir: Path) -> Any:
     }
     preserved = snapshot_nge_handlers()
     log.info("正在初始化 NGE2（截屏 / OCR / YOLO / HID，可能需要数秒）…")
+    engine: Any = None
     try:
+        from nge_studio.runner.window_resolve import resolve_hwnd_for_launch
+
+        hwnd = resolve_hwnd_for_launch(params)
+        kwargs["hwnd"] = hwnd
         engine = NGE2(**kwargs)
+        if hwnd is not None:
+            log.info("正在激活绑定窗口 hwnd=%s…", hwnd)
+            try:
+                engine.window.activate()
+            except Exception:
+                try:
+                    engine.close()
+                except Exception:
+                    log.exception("激活失败后关闭引擎出错")
+                raise
     finally:
         restore_nge_handlers(preserved)
     log.info("NGE2 初始化完成")

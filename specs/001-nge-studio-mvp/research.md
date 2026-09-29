@@ -82,6 +82,18 @@ Chinese companion: [`research.zh-CN.md`](./research.zh-CN.md).
 - **Rationale**: Spec FR-005a–e clarifications (2026-09-28).
 - **Alternatives considered**: Always absolute paths; OCR kwargs JSON file import — rejected.
 
+## 12c. Window title resolve + activate (2026-09-30)
+
+- **Decision**: Add optional `window_title`. Resolve hwnd before construct: hwnd wins if set; else first `find_by_title` substring match; else unbound. No match with title set → Start fails. After bound construct, `engine.window.activate()` before `run`.
+- **Rationale**: Spec FR-005f/g clarifications.
+- **Alternatives considered**: Exact title match; degrade to unbound on miss — rejected.
+
+## 12d. Game-level common modules (2026-09-30)
+
+- **Decision**: Optional `game_scripts/<game_id>/common.py` and `rules.py`; not catalog scripts; ensure importable from script `main` (game dir on `sys.path`). Demo shows usage.
+- **Rationale**: Spec FR-017.
+- **Alternatives considered**: Arbitrary game-level `.py`; `lib/` subpackage — rejected for this change.
+
 ## 13. Testing without hardware
 
 - **Decision**: Inject a fake engine factory in tests; catalog/settings/context tests pure; optional `@pytest.mark.qt` for widget smokes; hardware/HID manual path documented in quickstart only.

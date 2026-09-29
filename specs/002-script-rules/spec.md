@@ -18,15 +18,20 @@
 - Q: Where to document this? → A: New feature spec `002-script-rules`, separate from MVP `001` protocol docs (Option B).
 - Q: How does pause interact with the rule loop? → A: Each tick **starts** with `checkpoint` / `wait_if_paused`; while paused, **no** Rule is evaluated (Option A).
 
+### Session 2026-09-30
+
+- Q: How is shared FSM state modeled on `RuleContext`? → A: Authors MUST define a `@dataclass` FSM and pass it into the loop; `rctx.state.field = value` attribute access is required. Plain `dict` state is **not** supported (Option B). Spec updates apply to existing `002` (no new feature number).
+- Q: Must smoke demonstrate dataclass FSM? → A: Yes — `demo/smoke` MUST use a dataclass FSM for `rctx.state` (and MAY import game-level `common`/`rules` per `001` FR-017).
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - Reusable Rule loop for Studio scripts (Priority: P1)
 
-A script author builds a cooperative `run(engine, ctx)` using a Studio-provided Rule helper modeled on the legacy Bot: named rules with priority and cooldown, optional shared state, and one-action-per-tick evaluation. Studio still owns Start, Pause, Stop, and run-duration timeout via the existing UI and `RunContext`.
+A script author builds a cooperative `run(engine, ctx)` using a Studio-provided Rule helper modeled on the legacy Bot: named rules with priority and cooldown, a **required `@dataclass` FSM** as shared state, and one-action-per-tick evaluation. Studio still owns Start, Pause, Stop, and run-duration timeout via the existing UI and `RunContext`.
 
 **Why this priority**: Without a shared helper, every script reinvents the decision loop and drifts from the established Rule philosophy.
 
-**Independent Test**: Unit-test the helper with a fake engine and fake `RunContext`: register two rules with different priorities; assert only the higher-priority acting rule fires when `one_action_per_tick` is true; assert pause blocks evaluation until resume; assert stop ends the loop promptly.
+**Independent Test**: Unit-test the helper with a fake engine and fake `RunContext`: register two rules with different priorities on a dataclass FSM; assert attribute updates via `rctx.state`; assert only the higher-priority acting rule fires when `one_action_per_tick` is true; assert pause blocks evaluation until resume; assert stop ends the loop promptly; assert starting without a dataclass FSM is rejected.
 
 **Acceptance Scenarios**:
 
@@ -35,6 +40,8 @@ A script author builds a cooperative `run(engine, ctx)` using a Studio-provided 
 3. **Given** Studio Pause is active, **When** the rule loop would start a tick, **Then** it waits via `wait_if_paused` / `checkpoint` and does **not** evaluate any rule until resumed or stop is requested.
 4. **Given** Studio Stop or run-duration timeout sets stop on `RunContext`, **When** the loop observes `should_stop`, **Then** it exits without requiring the script to implement its own session max timer.
 5. **Given** an author imports the helper from Studio, **When** they write a new catalog script, **Then** they can register rules and run the loop without copying Bot code from the legacy engine.
+6. **Given** a `@dataclass` FSM instance is supplied to `RuleLoop.run`, **When** a rule assigns `rctx.state.some_field = value`, **Then** subsequent rules in later ticks observe that field value on the same object.
+7. **Given** an author attempts to run the loop with a plain `dict` (or omits the required dataclass FSM), **When** `run` is invoked, **Then** the helper rejects the call with a clear error (dict state is not supported).
 
 ---
 
@@ -89,17 +96,17 @@ Authors can read this feature’s contracts/quickstart and understand what Rules
 - **FR-005**: Each tick MUST begin with cooperative Studio pause/stop handling (`wait_if_paused` / `checkpoint` / equivalent). While paused, the helper MUST NOT evaluate any Rule.
 - **FR-006**: The helper MUST NOT implement Studio run-duration, Start, Pause, or Stop; those remain Studio UI + `RunContext` + existing runner timeout.
 - **FR-007**: The helper MUST NOT provide legacy Bot `session_max_seconds`, tick jitter, or `break_every` / `break_duration` human-break scheduling.
-- **FR-008**: The helper MUST expose shared mutable state for coordination between rules (legacy `ctx.state` analogue), distinct from Studio `RunContext`.
-- **FR-009**: `demo/smoke` MUST be rewritten to use the helper and MUST register at least one rule that calls a real NGE2 perception and/or control API on the provided `engine`.
+- **FR-008**: The helper MUST require a shared mutable **`@dataclass` FSM instance** for coordination between rules (exposed as `rctx.state`), distinct from Studio `RunContext`. Authors MUST update state via attribute access (`rctx.state.field = value`). Passing a plain `dict` (or omitting the FSM) MUST be rejected. Legacy dict-style `state["key"]` is **out of scope**.
+- **FR-009**: `demo/smoke` MUST be rewritten to use the helper with a dataclass FSM and MUST register at least one rule that calls a real NGE2 perception and/or control API on the provided `engine`. Smoke SHOULD demonstrate importing game-level `common` / `rules` when those files exist under `demo/` (per `001` FR-017).
 - **FR-010**: Smoke and the helper MUST remain compatible with Studio’s single-flight runner and engine `close()` in `finally`.
-- **FR-011**: Automated tests MUST cover helper priority, cooldown, pause gating, and stop exit without requiring HID hardware.
+- **FR-011**: Automated tests MUST cover helper priority, cooldown, pause gating, stop exit, and dataclass FSM attribute updates without requiring HID hardware.
 
 ### Key Entities
 
 - **Rule**: Named decision unit (priority, cooldown, `fn`); returns whether it acted.
-- **RuleContext**: Per-tick (or per-run) bag passed to rules: access to `engine`, shared `state`, and whatever thin adapters the helper documents (must not replace Studio `RunContext`).
-- **RuleLoop / ScriptBot** (name flexible): Hosts the list of rules and the tick loop bound to Studio `RunContext`.
-- **Shared State**: Author-owned dict/object for phase machines across rules.
+- **RuleContext**: Per-tick bag passed to rules: `engine`, **dataclass FSM** `state`, and Studio `RunContext` as `studio`.
+- **RuleLoop / ScriptBot** (name flexible): Hosts the list of rules and the tick loop bound to Studio `RunContext`; requires a dataclass FSM for `state`.
+- **FSM State**: Author-defined `@dataclass` instance for phase machines across rules (not a dict).
 
 ## Success Criteria *(mandatory)*
 

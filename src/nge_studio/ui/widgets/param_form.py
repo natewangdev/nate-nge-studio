@@ -52,6 +52,8 @@ class ParamForm(QWidget):
         self.hwnd = QLineEdit()
         self.hwnd.setPlaceholderText("可选，留空=屏幕坐标")
         self.pick_btn = _row_button("点选窗口")
+        self.window_title = QLineEdit()
+        self.window_title.setPlaceholderText("可选；无 hwnd 时按标题包含匹配第一个窗口")
         self.hwnd_title = QLabel("")
         self.hwnd_title.setObjectName("hintLabel")
         self.capture = QComboBox()
@@ -78,6 +80,7 @@ class ParamForm(QWidget):
             "资源目录 resource_dir",
             _input_with_button(self.resource_dir, self.resource_browse),
         )
+        form.addRow("窗口标题 window_title", self.window_title)
         form.addRow("窗口句柄 hwnd", _input_with_button(self.hwnd, self.pick_btn))
         form.addRow("", self.hwnd_title)
         form.addRow("截屏 capture", self.capture)
@@ -143,10 +146,11 @@ class ParamForm(QWidget):
         if path:
             self._apply_picked(self.yolo_names, path)
 
-    def set_parameters(self, params: LaunchParameters, *, window_title: str = "") -> None:
+    def set_parameters(self, params: LaunchParameters, *, picked_title: str = "") -> None:
         self.resource_dir.setText(params.resource_dir or "")
         self.hwnd.setText("" if params.hwnd is None else str(params.hwnd))
-        self.hwnd_title.setText(window_title)
+        self.window_title.setText(params.window_title or "")
+        self.hwnd_title.setText(picked_title or params.window_title or "")
         idx = self.capture.findText(params.capture)
         self.capture.setCurrentIndex(max(0, idx))
         self.humanize.setChecked(bool(params.humanize))
@@ -183,9 +187,11 @@ class ParamForm(QWidget):
             duration = None
         yolo_names = self.yolo_names.text().strip()
         log_dir = self.log_dir.text().strip()
+        title = self.window_title.text().strip()
         return LaunchParameters(
             resource_dir=self.resource_dir.text().strip(),
             hwnd=hwnd,
+            window_title=title or None,
             capture=self.capture.currentText(),
             humanize=self.humanize.isChecked(),
             control_mode=int(self.control_mode.value()),
@@ -199,3 +205,4 @@ class ParamForm(QWidget):
     def set_hwnd(self, hwnd: int, title: str) -> None:
         self.hwnd.setText(str(hwnd))
         self.hwnd_title.setText(title)
+        self.window_title.setText(title)

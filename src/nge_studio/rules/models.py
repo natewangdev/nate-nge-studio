@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, is_dataclass
 from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
@@ -12,12 +12,21 @@ if TYPE_CHECKING:
     from nge_studio.runner.context import RunContext
 
 
+def require_dataclass_fsm(state: Any) -> Any:
+    """Validate author FSM: must be a dataclass *instance*, not a dict or type."""
+    if state is None or isinstance(state, dict):
+        raise TypeError("RuleLoop.state 必须是 @dataclass 实例，不支持 dict")
+    if isinstance(state, type) or not is_dataclass(state):
+        raise TypeError("RuleLoop.state 必须是 @dataclass 实例")
+    return state
+
+
 @dataclass
 class RuleContext:
     """Per-tick context passed to rule functions."""
 
     engine: NGE2
-    state: dict[str, Any]
+    state: Any  # author @dataclass FSM instance
     studio: RunContext
 
 

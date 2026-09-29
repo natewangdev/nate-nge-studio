@@ -12,3 +12,4 @@
 4. Smoke 主 I/O 规则调用 `engine.capture.grab()`（可降级）；可另加心跳日志规则。
 5. 规则异常：记录日志、本 tick 视为未行动，并中止本 tick 后续规则评估。
 6. 公开类型名：`Rule`、`RuleContext`、`RuleLoop`。
+7. **（2026-09-30）** `RuleLoop.run` **必须**传入作者 `@dataclass` FSM；`rctx.state` 为该对象（属性访问）；拒绝纯 dict；smoke/测试须使用 dataclass FSM。

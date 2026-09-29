@@ -46,7 +46,8 @@
 | 字段 | 类型 | 规则 |
 |------|------|------|
 | resource_dir | str/path | 启动时必填（解析后非空） |
-| hwnd | int \| null | 可选；null/空 → 未绑定窗口 |
+| hwnd | int \| null | 可选；null/空 → 可从 `window_title` 解析，或未绑定 |
+| window_title | str \| null | 可选；仅当 `hwnd` 为空时使用；经 NGE2 `find_by_title` 子串匹配；取第一个；无匹配 → 启动失败 |
 | capture | `"dxcam"` \| `"mss"` | 默认 `"dxcam"` |
 | humanize | bool | 默认 `true` |
 | control_mode | int | 默认 `2`；非法值在引擎构造时失败 |

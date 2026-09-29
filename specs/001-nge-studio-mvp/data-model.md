@@ -46,7 +46,8 @@ Author-facing NGE2 construction fields + Studio timeout.
 | Field | Type | Rules |
 |-------|------|-------|
 | resource_dir | str/path | Required at Start (non-empty after resolve) |
-| hwnd | int \| null | Optional; null/empty → unbound window |
+| hwnd | int \| null | Optional; null/empty → may resolve from `window_title` or unbound |
+| window_title | str \| null | Optional; used only when `hwnd` is empty; substring match via NGE2 `find_by_title`; first match wins; no match → Start fails |
 | capture | `"dxcam"` \| `"mss"` | Default `"dxcam"` |
 | humanize | bool | Default `true` |
 | control_mode | int | Default `2`; UI may still expose; invalid values fail at engine construct |
@@ -136,9 +137,12 @@ See [settings-store.md](./contracts/settings-store.md).
 - Malformed manifest JSON or schema violation → **fails build**
 - Start with empty `resource_dir` → refuse Start with UI error
 - Invalid `ocr_kwargs` JSON → refuse Start
+- `window_title` set, `hwnd` empty, no title match → refuse Start with UI error
+- `hwnd` and `window_title` both set → use `hwnd`; activate after construct
 - Second Start while session not idle → refuse with clear message
 - Window pick targeting Studio PID → reject; hwnd unchanged
 - Closed/invalid hwnd at engine construct → Start fails; session returns idle; no zombie run
+- Activate fails after construct → Start fails; engine closed; no zombie run
 
 ## Non-goals
 

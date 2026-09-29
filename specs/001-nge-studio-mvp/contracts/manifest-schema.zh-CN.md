@@ -15,6 +15,7 @@
   "defaults": {
     "resource_dir": "string (optional)",
     "hwnd": null,
+    "window_title": null,
     "capture": "dxcam",
     "humanize": true,
     "control_mode": 2,
@@ -36,6 +37,7 @@
 | `defaults` | 否 | 对象；未知键 → 校验**失败**（严格） |
 | `defaults.capture` | 否 | 若存在仅允许 `"dxcam"` 或 `"mss"` |
 | `defaults.hwnd` | 否 | `null` 或非负整数 |
+| `defaults.window_title` | 否 | `null` 或字符串；hwnd 为空时用于标题解析 |
 | `defaults.ocr_kwargs` | 否 | `null` 或 JSON 对象（非字符串） |
 | `defaults.run_duration_sec` | 否 | `null` 或 &gt; 0 的数字（秒）。UI 以小时编辑（× 3600）。 |
 

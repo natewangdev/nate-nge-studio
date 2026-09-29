@@ -20,6 +20,11 @@
 - Q: 规格落点？ → A: 新功能规格 `002-script-rules`，与 MVP `001` 协议文档分开（选项 B）。
 - Q: 规则循环与暂停的关系？ → A: 每个 tick **开始**先 `checkpoint` / `wait_if_paused`；暂停期间**不**评估任何 Rule（选项 A）。
 
+### Session 2026-09-30
+
+- Q: `RuleContext` 共享 FSM 如何建模？ → A: 作者**必须**定义 `@dataclass` FSM 并传入循环；使用 `rctx.state.field = value` 属性访问。**不**支持纯 `dict`（选项 B）。规格更新落在既有 `002`。
+- Q: smoke 是否必须示范 dataclass FSM？ → A: 是 — `demo/smoke` **必须**用 dataclass FSM 作为 `rctx.state`（并可按 `001` FR-017 导入游戏级 `common`/`rules`）。
+
 ## 用户场景与测试 *(必填)*
 
 ### 用户故事 1 - 可复用的 Studio 脚本 Rule 循环（优先级：P1）
@@ -91,17 +96,17 @@
 - **FR-005**：每个 tick **必须**以协作式 Studio 暂停/结束处理开始（`wait_if_paused` / `checkpoint` / 等价）。暂停期间辅助库**不得**评估任何 Rule。
 - **FR-006**：辅助库**不得**实现 Studio 运行时长、启动、暂停或结束；这些仍归 Studio UI + `RunContext` + 现有 runner 超时。
 - **FR-007**：辅助库**不得**提供旧 Bot 的 `session_max_seconds`、tick 抖动或 `break_every` / `break_duration` 拟人休息调度。
-- **FR-008**：辅助库**必须**暴露规则间共享可变状态（旧 `ctx.state` 类比），且与 Studio `RunContext` 区分。
-- **FR-009**：`demo/smoke` **必须**改写为使用该辅助库，且**必须**注册至少一条对所提供 `engine` 调用真实 NGE2 感知和/或控制 API 的规则。
+- **FR-008**：辅助库**必须**要求以共享可变的 **`@dataclass` FSM 实例**协调规则（暴露为 `rctx.state`），且与 Studio `RunContext` 区分。作者**必须**通过属性访问更新状态（`rctx.state.field = value`）。传入纯 `dict`（或省略 FSM）**必须**被拒绝。旧式 `state["key"]` **不在范围**。
+- **FR-009**：`demo/smoke` **必须**改写为使用该辅助库与 dataclass FSM，且**必须**注册至少一条对所提供 `engine` 调用真实 NGE2 感知和/或控制 API 的规则。当 `demo/` 下存在游戏级 `common` / `rules` 时，smoke **应当**示范导入（见 `001` FR-017）。
 - **FR-010**：Smoke 与辅助库**必须**兼容 Studio 单实例 runner 以及 `finally` 中的引擎 `close()`。
-- **FR-011**：自动化测试**必须**覆盖辅助库的优先级、冷却、暂停门控与结束退出，且不要求 HID 硬件。
+- **FR-011**：自动化测试**必须**覆盖辅助库的优先级、冷却、暂停门控、结束退出与 dataclass FSM 属性更新，且不要求 HID 硬件。
 
 ### 关键实体
 
 - **Rule**：具名决策单元（优先级、冷却、`fn`）；返回是否已行动。
-- **RuleContext**：传给规则的每 tick（或每 run）上下文：可访问 `engine`、共享 `state`，以及辅助库文档化的薄适配（不得取代 Studio `RunContext`）。
-- **RuleLoop / ScriptBot**（名称可定）：托管规则列表与绑定 Studio `RunContext` 的 tick 循环。
-- **Shared State**：作者拥有的 dict/对象，供跨规则阶段机使用。
+- **RuleContext**：传给规则的每 tick 上下文：`engine`、**dataclass FSM** `state`、`studio`（`RunContext`）。
+- **RuleLoop / ScriptBot**（名称可定）：托管规则列表与绑定 Studio `RunContext` 的 tick 循环；**必须**提供 dataclass FSM 作为 `state`。
+- **FSM State**：作者定义的 `@dataclass` 实例，供跨规则阶段机使用（不是 dict）。
 
 ## 成功标准 *(必填)*
 

@@ -13,6 +13,7 @@ CAPTURE_CHOICES = frozenset({"dxcam", "mss"})
 class LaunchParameters:
     resource_dir: str = "."
     hwnd: int | None = None
+    window_title: str | None = None
     capture: str = "dxcam"
     humanize: bool = True
     control_mode: int = 2
