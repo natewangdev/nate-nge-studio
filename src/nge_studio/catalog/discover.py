@@ -6,7 +6,7 @@ import sys
 from pathlib import Path
 
 from nge_studio.catalog.models import Game, Script
-from nge_studio.catalog.validate import validate_script_dir
+from nge_studio.catalog.validate import load_game_manifest_file, validate_script_dir
 
 
 def resolve_catalog_root(explicit: Path | None = None) -> Path:
@@ -40,6 +40,7 @@ def discover_catalog(root: Path | None = None, *, validate: bool = True) -> list
         return []
     games: list[Game] = []
     for game_dir in sorted(p for p in catalog_root.iterdir() if p.is_dir() and not p.name.startswith(".")):
+        game_manifest = load_game_manifest_file(game_dir / "manifest.json")
         scripts: list[Script] = []
         for script_dir in sorted(
             p
@@ -61,5 +62,12 @@ def discover_catalog(root: Path | None = None, *, validate: bool = True) -> list
                 )
             )
         if scripts:
-            games.append(Game(game_id=game_dir.name, path=game_dir.resolve(), scripts=scripts))
+            games.append(
+                Game(
+                    game_id=game_dir.name,
+                    path=game_dir.resolve(),
+                    scripts=scripts,
+                    manifest=game_manifest,
+                )
+            )
     return games

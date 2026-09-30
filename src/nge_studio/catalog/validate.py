@@ -6,7 +6,7 @@ import json
 from pathlib import Path
 from typing import Any
 
-from nge_studio.catalog.models import CAPTURE_CHOICES, LaunchParameters, Manifest
+from nge_studio.catalog.models import CAPTURE_CHOICES, GameManifest, LaunchParameters, Manifest
 
 
 class CatalogValidationError(Exception):
@@ -17,6 +17,7 @@ class CatalogValidationError(Exception):
 
 
 _MANIFEST_TOP = frozenset({"display_name", "description", "defaults"})
+_GAME_MANIFEST_TOP = frozenset({"display_name", "description"})
 _DEFAULT_KEYS = frozenset(f.name for f in LaunchParameters.__dataclass_fields__.values())  # type: ignore[attr-defined]
 
 
@@ -60,6 +61,32 @@ def load_manifest_file(path: Path) -> Manifest:
     return parse_manifest(raw, source=path)
 
 
+def parse_game_manifest(data: dict[str, Any], *, source: Path) -> GameManifest:
+    unknown = set(data) - _GAME_MANIFEST_TOP
+    if unknown:
+        raise CatalogValidationError(source, f"游戏 manifest 含未知字段: {sorted(unknown)}")
+    display = data.get("display_name")
+    desc = data.get("description")
+    if display is not None and not isinstance(display, str):
+        raise CatalogValidationError(source, "display_name 必须是字符串")
+    if desc is not None and not isinstance(desc, str):
+        raise CatalogValidationError(source, "description 必须是字符串")
+    return GameManifest(display_name=display, description=desc)
+
+
+def load_game_manifest_file(path: Path) -> GameManifest | None:
+    """Load optional game-level manifest. Missing file → None; present+invalid → raise."""
+    if not path.is_file():
+        return None
+    try:
+        raw = json.loads(path.read_text(encoding="utf-8"))
+    except json.JSONDecodeError as exc:
+        raise CatalogValidationError(path, f"JSON 无效: {exc}") from exc
+    if not isinstance(raw, dict):
+        raise CatalogValidationError(path, "游戏 manifest 根节点必须是对象")
+    return parse_game_manifest(raw, source=path)
+
+
 def validate_script_dir(script_dir: Path) -> Manifest:
     manifest = load_manifest_file(script_dir / "manifest.json")
     main_py = script_dir / "main.py"
@@ -81,6 +108,7 @@ def validate_catalog_tree(root: Path) -> list[tuple[str, str]]:
         raise CatalogValidationError(root, "目录根不存在")
     passed: list[tuple[str, str]] = []
     for game_dir in sorted(p for p in root.iterdir() if p.is_dir() and not p.name.startswith(".")):
+        load_game_manifest_file(game_dir / "manifest.json")
         script_dirs = [
             p
             for p in game_dir.iterdir()

@@ -13,7 +13,14 @@ from PyInstaller.utils.hooks import (
 block_cipher = None
 repo = Path(SPECPATH).resolve().parent
 
-datas = [(str(repo / "game_scripts"), "game_scripts")]
+app_icon = repo / "assets" / "icons" / "app.ico"
+if not app_icon.is_file():
+    raise SystemExit(f"缺少产品图标: {app_icon}")
+
+datas = [
+    (str(repo / "game_scripts"), "game_scripts"),
+    (str(app_icon), "assets/icons"),
+]
 binaries = []
 # Author scripts import Studio APIs at runtime (e.g. nge_studio.rules); collect all
 # submodules so dynamically loaded main.py is not limited to the UI import graph.
@@ -70,6 +77,7 @@ exe = EXE(
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
+    icon=str(app_icon),
 )
 coll = COLLECT(
     exe,

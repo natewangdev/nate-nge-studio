@@ -64,6 +64,12 @@ class Manifest:
 
 
 @dataclass
+class GameManifest:
+    display_name: str | None = None
+    description: str | None = None
+
+
+@dataclass
 class Script:
     game_id: str
     script_id: str
@@ -89,6 +95,14 @@ class Game:
     game_id: str
     path: Path
     scripts: list[Script] = field(default_factory=list)
+    manifest: GameManifest | None = None
+
+    @property
+    def display_name(self) -> str:
+        if self.manifest is None:
+            return self.game_id
+        name = (self.manifest.display_name or "").strip()
+        return name if name else self.game_id
 
 
 def merge_launch_parameters(

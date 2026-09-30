@@ -25,7 +25,8 @@ class CatalogPanel(QWidget):
         self._tree.clear()
         self._scripts.clear()
         for game in games:
-            game_item = QTreeWidgetItem([game.game_id])
+            game_item = QTreeWidgetItem([game.display_name])
+            game_item.setToolTip(0, (game.manifest.description if game.manifest else None) or game.game_id)
             game_item.setData(0, 256, None)
             for script in game.scripts:
                 child = QTreeWidgetItem([script.display_name])
