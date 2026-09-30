@@ -23,7 +23,7 @@ from nge_studio.catalog.models import Script, merge_launch_parameters
 from nge_studio.hotkeys.win32 import GlobalHotkeys, HotkeyRegistrationError, dispatch_hotkey_message
 from nge_studio.logging_bridge.qt_handler import QtLogHandler, attach_nge_handler, detach_handler
 from nge_studio.runner.service import RunState, ScriptRunner
-from nge_studio.settings.store import SettingsStore
+from nge_studio.settings.store import DEFAULT_MAIN_SPLITTER_STRETCH, SettingsStore
 from nge_studio.ui.styles import APP_QSS
 from nge_studio.ui.widgets.catalog_panel import CatalogPanel
 from nge_studio.ui.widgets.log_panel import LogPanel
@@ -58,6 +58,10 @@ class MainWindow(QMainWindow):
         self._picking = False
         self._log_handler: QtLogHandler | None = None
         self._hotkeys: GlobalHotkeys | None = None
+        self._splitter_save_timer = QTimer(self)
+        self._splitter_save_timer.setSingleShot(True)
+        self._splitter_save_timer.setInterval(300)
+        self._splitter_save_timer.timeout.connect(self._persist_splitter_sizes)
 
         brand = QLabel("NGE-STUDIO")
         brand.setObjectName("brandLabel")
@@ -83,26 +87,35 @@ class MainWindow(QMainWindow):
         controls.addStretch(1)
         controls.addWidget(self.status)
 
-        right = QVBoxLayout()
-        right.addWidget(QLabel("启动参数"))
-        right.addWidget(self.params, stretch=2)
-        right.addLayout(controls)
-        right.addWidget(QLabel("实时日志"))
-        right.addWidget(self.logs, stretch=3)
-        right_w = QWidget()
-        right_w.setLayout(right)
-
-        split = QSplitter()
         left = QWidget()
+        left.setMinimumWidth(160)
         left_l = QVBoxLayout(left)
         left_l.addWidget(brand)
         left_l.addWidget(hint)
         left_l.addWidget(self.catalog, stretch=1)
-        split.addWidget(left)
-        split.addWidget(right_w)
-        split.setStretchFactor(0, 1)
-        split.setStretchFactor(1, 2)
-        self.setCentralWidget(split)
+
+        center = QWidget()
+        center.setMinimumWidth(240)
+        center_l = QVBoxLayout(center)
+        center_l.addWidget(QLabel("启动参数"))
+        center_l.addWidget(self.params, stretch=1)
+        center_l.addLayout(controls)
+
+        right = QWidget()
+        right.setMinimumWidth(240)
+        right_l = QVBoxLayout(right)
+        right_l.addWidget(QLabel("实时日志"))
+        right_l.addWidget(self.logs, stretch=1)
+
+        self._main_splitter = QSplitter()
+        self._main_splitter.addWidget(left)
+        self._main_splitter.addWidget(center)
+        self._main_splitter.addWidget(right)
+        for index, stretch in enumerate(DEFAULT_MAIN_SPLITTER_STRETCH):
+            self._main_splitter.setStretchFactor(index, stretch)
+        self._main_splitter.setChildrenCollapsible(False)
+        self._main_splitter.splitterMoved.connect(self._on_splitter_moved)
+        self.setCentralWidget(self._main_splitter)
 
         self.runner = ScriptRunner(
             engine_factory=engine_factory,
@@ -131,6 +144,7 @@ class MainWindow(QMainWindow):
         if warn:
             QMessageBox.warning(self, "设置", warn)
         QTimer.singleShot(0, self._setup_hotkeys)
+        QTimer.singleShot(0, self._restore_splitter_sizes)
 
     def nativeEvent(self, eventType, message):  # noqa: N802
         try:
@@ -164,7 +178,29 @@ class MainWindow(QMainWindow):
         if self._log_handler:
             detach_handler(self._log_handler)
         self._persist_selected_params()
+        self._persist_splitter_sizes()
         super().closeEvent(event)
+
+    def _on_splitter_moved(self, *_args: object) -> None:
+        self._splitter_save_timer.start()
+
+    def _restore_splitter_sizes(self) -> None:
+        saved = self._settings.main_splitter_sizes()
+        if saved is not None:
+            self._main_splitter.setSizes(saved)
+            return
+        total = max(self._main_splitter.size().width(), self.width() - 40, 800)
+        weights = DEFAULT_MAIN_SPLITTER_STRETCH
+        weight_sum = sum(weights)
+        self._main_splitter.setSizes([max(160, total * w // weight_sum) for w in weights])
+
+    def _persist_splitter_sizes(self) -> None:
+        sizes = [int(v) for v in self._main_splitter.sizes()]
+        self._settings.set_main_splitter_sizes(sizes)
+        try:
+            self._store.save(self._settings)
+        except Exception as exc:
+            log.warning("保存布局失败: %s", exc)
 
     def _setup_hotkeys(self) -> None:
         try:
