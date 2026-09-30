@@ -90,8 +90,8 @@ wheels = [
 
 [[package]]
 name = "nate-game-engine"
-version = "0.1.0"
-source = { editable = "../nate-game-engine" }
+version = "0.1.1"
+source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "dxcam" },
     { name = "mss" },
@@ -103,24 +103,10 @@ dependencies = [
     { name = "pyserial" },
     { name = "rapidocr-onnxruntime" },
 ]
-
-[package.metadata]
-requires-dist = [
-    { name = "dxcam", specifier = ">=0.0.5" },
-    { name = "mss", specifier = ">=9.0" },
-    { name = "numpy", specifier = ">=1.26" },
-    { name = "onnxruntime", specifier = ">=1.17" },
-    { name = "opencv-python-headless", specifier = ">=4.8" },
-    { name = "pillow", specifier = ">=12.3.0" },
-    { name = "pyserial", specifier = ">=3.5" },
-    { name = "pytest", marker = "extra == 'dev'", specifier = ">=8.0" },
-    { name = "rapidocr-onnxruntime", specifier = ">=1.3" },
-    { name = "ruff", marker = "extra == 'dev'", specifier = ">=0.9" },
+sdist = { url = "https://files.pythonhosted.org/packages/d0/c9/a1ba5d2b259327baaf43081f186e99eea5d0ea05d28d3d9963bec92a962a/nate_game_engine-0.1.1.tar.gz", hash = "sha256:6df2bcc314c7fe2962c5859a2c3b20445bc1cf27a7abf328e13702e41c141a8d", size = 237683, upload-time = "2026-09-30T06:31:00.42Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/52/ed/801d643a826118df72411eece38ff8a8cee022a17237f5d1c9f39c6f503d/nate_game_engine-0.1.1-py3-none-any.whl", hash = "sha256:7cf811d770318ec2cc6320625a4d2ce4d550cd6d705e5b114d51409d59d01727", size = 28740, upload-time = "2026-09-30T06:30:58.816Z" },
 ]
-provides-extras = ["dev"]
-
-[package.metadata.requires-dev]
-dev = [{ name = "onnx", specifier = ">=1.23.0" }]
 
 [[package]]
 name = "nate-nge-studio"
@@ -149,7 +135,7 @@ dev = [
 
 [package.metadata]
 requires-dist = [
-    { name = "nate-game-engine", editable = "../nate-game-engine" },
+    { name = "nate-game-engine", specifier = ">=0.1.1" },
     { name = "pyinstaller", marker = "extra == 'dev'", specifier = ">=6.0" },
     { name = "pyside6", specifier = ">=6.6" },
     { name = "pytest", marker = "extra == 'dev'", specifier = ">=8.0" },
