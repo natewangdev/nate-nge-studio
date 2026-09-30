@@ -15,6 +15,28 @@ EngineFactory = Callable[[LaunchParameters, Path], Any]
 log = logging.getLogger("nge.studio.engine")
 
 
+def resolve_resource_dir(resource_dir: str, script_dir: Path) -> Path:
+    """Resolve ``resource_dir``; relative values are against ``script_dir``."""
+    resource = Path(resource_dir)
+    if not resource.is_absolute():
+        return (script_dir / resource).resolve()
+    return resource.resolve()
+
+
+def resolve_log_dir_for_launch(log_dir: str | None, resource_dir: Path) -> Path | None:
+    """Resolve ``log_dir``; relative values are against resolved ``resource_dir``.
+
+    Matches UI browse storage (FR-005c): paths under resource_dir are stored relative
+    to it, so Start must join them to resource_dir — not the script folder.
+    """
+    if log_dir is None or str(log_dir).strip() == "":
+        return None
+    path = Path(log_dir)
+    if not path.is_absolute():
+        return (resource_dir / path).resolve()
+    return path.resolve()
+
+
 def _patch_nge2_logging_bootstrap() -> None:
     """Prevent NGE2 from wiping host-attached ``nge`` handlers (UI live log)."""
     import nge2.log as nge_log
@@ -49,16 +71,8 @@ def create_nge2_engine(params: LaunchParameters, script_dir: Path) -> Any:
 
     _patch_nge2_logging_bootstrap()
 
-    resource = Path(params.resource_dir)
-    if not resource.is_absolute():
-        resource = (script_dir / resource).resolve()
-    log_dir = params.log_dir
-    if log_dir is not None and str(log_dir).strip() != "":
-        log_path: Path | None = Path(log_dir)
-        if not log_path.is_absolute():
-            log_path = (script_dir / log_path).resolve()
-    else:
-        log_path = None
+    resource = resolve_resource_dir(params.resource_dir, script_dir)
+    log_path = resolve_log_dir_for_launch(params.log_dir, resource)
 
     yolo_model = params.yolo_model
     yolo_names = params.yolo_names

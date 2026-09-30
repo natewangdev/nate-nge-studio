@@ -78,7 +78,7 @@ Chinese companion: [`research.zh-CN.md`](./research.zh-CN.md).
 
 ## 12b. Path browse UX
 
-- **Decision**: Folder browse for `resource_dir` and `log_dir`; file browse for `yolo_model` / `yolo_names` with suggested filters (`*.onnx`, `*.names`/`*.txt`, plus All files). Dialogs start at `resource_dir` when it exists, else user home. Picked paths under `resource_dir` are stored relative; otherwise absolute. Window-pick and Browse buttons match adjacent input height.
+- **Decision**: Folder browse for `resource_dir` and `log_dir`; file browse for `yolo_model` / `yolo_names` with suggested filters (`*.onnx`, `*.names`/`*.txt`, plus All files). Dialogs start at `resource_dir` when it exists, else user home. Picked paths under `resource_dir` are stored relative; otherwise absolute. Window-pick and Browse buttons match adjacent input height. **At Start**: relative `resource_dir` → script dir; relative `log_dir` → resolved `resource_dir` (FR-005h); not script dir for `log_dir`.
 - **Rationale**: Spec FR-005a–e clarifications (2026-09-28).
 - **Alternatives considered**: Always absolute paths; OCR kwargs JSON file import — rejected.
 
