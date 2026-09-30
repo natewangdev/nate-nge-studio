@@ -33,6 +33,10 @@
 - Q: If `resource_dir` is empty/invalid when opening a picker, where should the dialog start? → A: Fall back to the user home directory (Option A).
 - Q: UI run duration in hours — change persisted field? → A: Keep storing `run_duration_sec`; UI edits hours and converts (`hours × 3600`) on read/write (Option A).
 
+### Session 2026-10-01
+
+- Q: At Start, how are relative `log_dir` / path fields resolved when UI stores them relative to `resource_dir`? → A: Resolve relative `resource_dir` against the **script directory**; resolve relative `log_dir` against the **already-resolved `resource_dir`** (not the script directory). Absolute paths stay absolute. YOLO relative paths continue to follow NGE2 (`resource_dir`).
+
 ### Session 2026-09-30
 
 - Q: Window title vs hwnd when both set? → A: If hwnd is set, construct NGE2 with hwnd (title does not override). If only `window_title` is set, resolve the first match via NGE2 `find_by_title` (substring, case-insensitive) and bind that hwnd (Option A matching + hwnd precedence).
@@ -83,6 +87,7 @@ After selecting a script, the operator configures NGE2 launch parameters (full c
 12. **Given** only `window_title` is set and at least one visible top-level window title contains that string, **When** the operator presses Start, **Then** Studio binds the first match’s hwnd, constructs NGE2 with it, activates the window, then runs the script.
 13. **Given** only `window_title` is set and no window matches, **When** the operator presses Start, **Then** Start fails with a clear error and no run starts.
 14. **Given** both `hwnd` and `window_title` are set, **When** the operator presses Start, **Then** Studio constructs NGE2 using `hwnd` (title is not used for resolution) and activates that window before `run`.
+15. **Given** `resource_dir` is an absolute folder (e.g. `D:/NGE-STUDIO/d4`) and `log_dir` is the relative value `logs`, **When** the operator presses Start, **Then** engine file logs are written under that resource folder’s `logs` directory (e.g. `D:/NGE-STUDIO/d4/logs`), **not** under the catalog script directory.
 
 ---
 
@@ -162,6 +167,7 @@ A maintainer produces a Windows executable build of NGE-STUDIO that includes the
 - **FR-005a**: `resource_dir` and `log_dir` MUST each provide a text input and a Browse control that opens a **folder** dialog; values MAY also be typed manually.
 - **FR-005b**: `yolo_model` and `yolo_names` MUST each provide a text input and a Browse control that opens a **file** dialog (suggested filters: model `*.onnx`; names `*.names` and `*.txt`; plus All files). `ocr_kwargs` MUST remain editable JSON text and MUST NOT offer a file Browse control.
 - **FR-005c**: Path/file browse dialogs MUST start in the current `resource_dir` when that path is a non-empty existing directory; otherwise they MUST start in the user home directory. After a successful pick, if the chosen path is under `resource_dir`, the field MUST store a path relative to `resource_dir`; otherwise it MUST store an absolute path.
+- **FR-005h**: At Start, Studio MUST resolve launch paths as follows: (1) relative `resource_dir` → relative to the **script directory**; absolute `resource_dir` unchanged (then resolved). (2) relative `log_dir` → relative to the **resolved `resource_dir`**; absolute `log_dir` unchanged. (3) relative YOLO model/names paths follow NGE2 rules against `resource_dir`. Studio MUST NOT resolve relative `log_dir` against the script directory.
 - **FR-005d**: Studio run-duration MUST be edited in the UI as **hours** (non-integer values allowed, e.g. `0.5`). Persistence and the runner MUST continue to use `run_duration_sec` (seconds = hours × 3600). Empty/omitted/≤0 means no Studio timeout.
 - **FR-005e**: The window-pick button and path Browse buttons MUST match the visual height of their adjacent input fields on the same row.
 - **FR-005f**: Launch parameters MUST include optional `window_title` (string). Resolution before NGE2 construct: (1) if `hwnd` is set, use that hwnd; (2) else if `window_title` is non-empty, find visible top-level windows whose titles **contain** the query (case-insensitive, same semantics as NGE2 `Window.find_by_title`) and bind the **first** match’s hwnd; (3) else unbound. If (2) yields no matches, Start MUST fail with a clear UI error.
@@ -209,7 +215,7 @@ A maintainer produces a Windows executable build of NGE-STUDIO that includes the
 - `hwnd` and/or `window_title` may be left empty at Start; when both empty, behavior matches NGE2 unbound-window (screen-absolute) semantics. When only title is set, Studio resolves hwnd before construct; when hwnd is set, hwnd wins.
 - Game-level `common.py` / `rules.py` are author conventions for shared code within a game folder; they are not catalog entries.
 - `ocr_kwargs` is exposed as an advanced structured field (JSON text) rather than a large dedicated form or file picker in MVP.
-- Path browse UX (folders for `resource_dir`/`log_dir`, files for YOLO fields, relative-when-under-`resource_dir`, home fallback) applies only to the launch-parameter form; it does not change NGE2 constructor semantics.
+- Path browse UX (folders for `resource_dir`/`log_dir`, files for YOLO fields, relative-when-under-`resource_dir`, home fallback) applies to the launch-parameter form. At Start, relative `log_dir` is joined to resolved `resource_dir` (FR-005h), aligning stored relative paths with engine log location.
 - Run-duration **display unit is hours**; the canonical stored field remains `run_duration_sec` in manifests and settings for backward compatibility.
 - Global hotkeys require appropriate OS permissions; failure modes are reported in-app.
 - Visual design direction (modern + tech) will be detailed in the implementation plan/UI guidelines without blocking this spec.

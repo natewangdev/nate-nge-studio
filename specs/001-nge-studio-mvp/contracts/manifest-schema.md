@@ -44,7 +44,11 @@ File: `game_scripts/<game_id>/<script_id>/manifest.json` (UTF-8 JSON object).
 ## Validation outcomes
 
 - File missing, not JSON object, or rule violation → **catalog validate fails the entire build** with path + reason.
-- Relative paths in defaults are interpreted relative to the **script directory** at Start unless absolute.
+- Path resolution at Start:
+  - Relative `resource_dir` → relative to the **script directory**.
+  - Relative `log_dir` → relative to the **resolved `resource_dir`** (same base as UI-relative storage under FR-005c / FR-005h).
+  - Relative YOLO paths → per NGE2 against `resource_dir`.
+  - Absolute paths unchanged.
 
 ## Example (sample smoke script)
 

@@ -78,7 +78,7 @@
 
 ## 12b. 路径选择 UX
 
-- **决策**：`resource_dir` / `log_dir` 文件夹选择；`yolo_model` / `yolo_names` 文件选择（建议过滤 `*.onnx`、`*.names`/`*.txt`，另有所有文件）。对话框在 `resource_dir` 存在时以其为起始，否则用户主目录。落在 `resource_dir` 下的路径存相对，否则绝对。「点选窗口」与「选择」按钮与同行输入框同高。
+- **决策**：`resource_dir` / `log_dir` 文件夹选择；`yolo_model` / `yolo_names` 文件选择（建议过滤 `*.onnx`、`*.names`/`*.txt`，另有所有文件）。对话框在 `resource_dir` 存在时以其为起始，否则用户主目录。落在 `resource_dir` 下的路径存相对，否则绝对。「点选窗口」与「选择」按钮与同行输入框同高。**启动时**：相对 `resource_dir` → 脚本目录；相对 `log_dir` → 已解析 `resource_dir`（FR-005h）；`log_dir` 不得接到脚本目录。
 - **理由**：规格 FR-005a–e（2026-09-28 澄清）。
 - **备选**：一律绝对路径；OCR kwargs 从 JSON 文件导入 — 拒绝。
 
