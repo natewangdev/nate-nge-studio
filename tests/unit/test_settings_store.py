@@ -5,7 +5,7 @@ from __future__ import annotations
 from pathlib import Path
 
 from nge_studio.catalog.models import LaunchParameters
-from nge_studio.settings.store import AppSettings, SettingsStore
+from nge_studio.settings.store import AppSettings, SettingsStore, normalize_main_splitter_sizes
 
 
 def test_round_trip(tmp_path: Path) -> None:
@@ -33,4 +33,41 @@ def test_corrupt_recovers(tmp_path: Path) -> None:
     settings, warn = store.load()
     assert settings.version == 1
     assert warn is not None
-    assert path.with_suffix(".json.bak").is_file() or True  # bak may use .json.bak
+
+
+def test_splitter_sizes_round_trip(tmp_path: Path) -> None:
+    path = tmp_path / "settings.json"
+    store = SettingsStore(path)
+    settings = AppSettings.defaults()
+    settings.set_main_splitter_sizes([200, 300, 300])
+    store.save(settings)
+    loaded, warn = store.load()
+    assert warn is None
+    assert loaded.main_splitter_sizes() == [200, 300, 300]
+
+
+def test_invalid_splitter_sizes_ignored_on_load(tmp_path: Path) -> None:
+    path = tmp_path / "settings.json"
+    path.write_text(
+        """{
+          "version": 1,
+          "hotkeys": {
+            "start": {"key": "F9", "modifiers": []},
+            "pause": {"key": "F10", "modifiers": []},
+            "stop": {"key": "F11", "modifiers": []}
+          },
+          "launch_configs": {},
+          "ui": {"main_splitter_sizes": [10, -1, 10]}
+        }""",
+        encoding="utf-8",
+    )
+    loaded, warn = SettingsStore(path).load()
+    assert warn is None
+    assert loaded.main_splitter_sizes() is None
+
+
+def test_normalize_main_splitter_sizes() -> None:
+    assert normalize_main_splitter_sizes([2, 3, 3]) == [2, 3, 3]
+    assert normalize_main_splitter_sizes([1, 2]) is None
+    assert normalize_main_splitter_sizes(None) is None
+    assert normalize_main_splitter_sizes(["a", 2, 3]) is None
