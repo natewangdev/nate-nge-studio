@@ -73,7 +73,7 @@ uv run nge-studio
 
 ## 校验脚本目录
 
-新增 `game_scripts/<game_id>/<script_id>/`（含 `manifest.json` + `main.py` 的 `run`）后：
+新增 `game_scripts/<game_id>/<script_id>/`（含脚本 `manifest.json` + `main.py` 的 `run`）后：
 
 ```powershell
 uv run python scripts/validate_catalog.py
@@ -82,6 +82,8 @@ uv run nge-studio-validate
 ```
 
 任一非法脚本会使校验**失败**（非 0 退出），并打印路径与原因。
+
+可选：在 `game_scripts/<game_id>/manifest.json` 提供游戏级 `display_name`（缺省回退文件夹 ID）。该文件**不得**含 `defaults`；若存在但非法，整次校验同样失败。契约见 [`game-manifest-schema.md`](specs/004-icon-game-display/contracts/game-manifest-schema.md)。
 
 ## 脚本作者协议
 
@@ -116,6 +118,8 @@ uv run pyinstaller --noconfirm packaging/nge-studio.spec
 
 产物目录：`dist/NGE-STUDIO/`（onedir）。其中嵌入 `game_scripts/`，并通过 `collect_data_files` 打入 `rapidocr_onnxruntime` 的 `config.yaml` / 模型等数据（否则引擎构造 OCR 会报找不到 config）。源码中新增脚本后需重新打包才会出现在该构建的界面目录中。
 
+应用图标：`assets/icons/app.ico`（窗口 / 任务栏 / 打包 exe 共用）。缺失该文件时打包会失败。
+
 **说明**：打包 exe 启动脚本时仍会走完整 `NGE2` 构造（OCR / YOLO / HID）。冒烟示例若未准备 `models/yolo.onnx` 或本机无 ESP32-S3，可能在 OCR 修复后继续在 YOLO/串口步骤失败——这属于引擎运行环境，而非目录发现问题。
 
 ## 测试
@@ -131,3 +135,4 @@ uv run ruff check src tests
 
 - MVP 外壳：`specs/001-nge-studio-mvp/`
 - 脚本 Rule 辅助库（priority / cooldown 循环，生命周期仍归 Studio）：见 `specs/002-script-rules/` 与契约 [`rule-helper.md`](specs/002-script-rules/contracts/rule-helper.md)
+- 应用图标与游戏显示名：`specs/004-icon-game-display/`
