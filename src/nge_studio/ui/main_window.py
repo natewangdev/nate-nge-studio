@@ -19,7 +19,7 @@ from PySide6.QtWidgets import (
 )
 
 from nge_studio.catalog.discover import discover_catalog
-from nge_studio.catalog.models import Script, merge_launch_parameters
+from nge_studio.catalog.models import Script, merge_launch_parameters, merge_script_params
 from nge_studio.hotkeys.win32 import GlobalHotkeys, HotkeyRegistrationError, dispatch_hotkey_message
 from nge_studio.logging_bridge.qt_handler import QtLogHandler, attach_nge_handler, detach_handler
 from nge_studio.runner.service import RunState, ScriptRunner
@@ -63,11 +63,6 @@ class MainWindow(QMainWindow):
         self._splitter_save_timer.setInterval(300)
         self._splitter_save_timer.timeout.connect(self._persist_splitter_sizes)
 
-        brand = QLabel("NGE-STUDIO")
-        brand.setObjectName("brandLabel")
-        hint = QLabel("游戏脚本管理 · 基于 NGE2")
-        hint.setObjectName("hintLabel")
-
         self.catalog = CatalogPanel()
         self.params = ParamForm()
         self.logs = LogPanel()
@@ -87,24 +82,32 @@ class MainWindow(QMainWindow):
         controls.addStretch(1)
         controls.addWidget(self.status)
 
+        # Shared top inset so catalog / launch GroupBox / log heading share one line
+        # (QGroupBox::title uses margin-top: 10px in APP_QSS).
+        column_top = 10
+        column_side = 6
+
         left = QWidget()
         left.setMinimumWidth(160)
         left_l = QVBoxLayout(left)
-        left_l.addWidget(brand)
-        left_l.addWidget(hint)
+        left_l.setContentsMargins(column_side, column_top, column_side, column_side)
         left_l.addWidget(self.catalog, stretch=1)
 
         center = QWidget()
         center.setMinimumWidth(240)
         center_l = QVBoxLayout(center)
-        center_l.addWidget(QLabel("启动参数"))
+        center_l.setContentsMargins(column_side, column_top, column_side, column_side)
         center_l.addWidget(self.params, stretch=1)
         center_l.addLayout(controls)
+
+        log_heading = QLabel("实时日志")
+        log_heading.setObjectName("columnHeading")
 
         right = QWidget()
         right.setMinimumWidth(240)
         right_l = QVBoxLayout(right)
-        right_l.addWidget(QLabel("实时日志"))
+        right_l.setContentsMargins(column_side, column_top, column_side, column_side)
+        right_l.addWidget(log_heading)
         right_l.addWidget(self.logs, stretch=1)
 
         self._main_splitter = QSplitter()
@@ -230,25 +233,39 @@ class MainWindow(QMainWindow):
         self._persist_selected_params()
         self._selected = script
         if script is None:
+            self.params.set_script_param_schema([])
             return
         self._manifest_defaults = script.manifest.defaults
         overlay = self._store.get_launch_overlay(self._settings, script.key)
         merged = merge_launch_parameters(script.manifest.defaults, overlay)
         self.params.set_parameters(merged)
+        sp_overlay = self._store.get_script_params_overlay(self._settings, script.key)
+        sp_merged = merge_script_params(script.manifest.script_params, sp_overlay)
+        self.params.set_script_param_schema(script.manifest.script_params, sp_merged)
 
     def _reset_defaults(self) -> None:
         if self._selected is None:
             return
         self.params.set_parameters(self._selected.manifest.defaults)
+        self.params.set_script_param_schema(
+            self._selected.manifest.script_params,
+            merge_script_params(self._selected.manifest.script_params, None),
+        )
 
     def _persist_selected_params(self) -> None:
         if self._selected is None:
             return
         try:
             params = self.params.get_parameters()
+            script_params = self.params.get_script_params()
         except Exception:
             return
-        self._store.set_launch_overlay(self._settings, self._selected.key, params)
+        self._store.set_launch_overlay(
+            self._settings,
+            self._selected.key,
+            params,
+            script_params=script_params,
+        )
         try:
             self._store.save(self._settings)
         except Exception as exc:
@@ -300,6 +317,7 @@ class MainWindow(QMainWindow):
         try:
             params = self.params.get_parameters()
             params.validate_for_start()
+            script_params = self.params.get_script_params()
         except Exception as exc:
             QMessageBox.warning(self, "参数无效", str(exc))
             return
@@ -308,7 +326,7 @@ class MainWindow(QMainWindow):
         self._attach_log_handler()
         logging.getLogger("nge.studio").info("正在启动脚本: %s", self._selected.key)
         try:
-            self.runner.start(self._selected, params)
+            self.runner.start(self._selected, params, script_params=script_params)
         except Exception as exc:
             self._detach_log_handler(retain=False)
             QMessageBox.critical(self, "启动失败", str(exc))

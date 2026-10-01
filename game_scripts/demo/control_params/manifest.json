@@ -1,0 +1,45 @@
+{
+  "display_name": "控制参数示例",
+  "description": "演示 script_params、ctx.request_stop；时长结束后的「关机」请在 Studio 表单「时长结束后」选择（仅超时生效）",
+  "defaults": {
+    "resource_dir": ".",
+    "capture": "dxcam",
+    "humanize": true,
+    "control_mode": 2,
+    "run_duration_sec": null,
+    "duration_end_action": "none"
+  },
+  "script_params": [
+    {
+      "id": "greeting",
+      "type": "string",
+      "label": "问候语",
+      "default": "hello"
+    },
+    {
+      "id": "max_ticks",
+      "type": "int",
+      "label": "最大 tick 数",
+      "default": 3
+    },
+    {
+      "id": "tick_interval_sec",
+      "type": "number",
+      "label": "tick 间隔(秒)",
+      "default": 0.5
+    },
+    {
+      "id": "verbose",
+      "type": "bool",
+      "label": "详细日志",
+      "default": true
+    },
+    {
+      "id": "mode",
+      "type": "choice",
+      "label": "运行模式",
+      "default": "demo",
+      "choices": ["demo", "stress"]
+    }
+  ]
+}

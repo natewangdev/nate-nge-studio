@@ -42,3 +42,15 @@ def heartbeat(rctx: RuleContext) -> bool:
         except Exception:
             pass
     return True
+
+
+def control_tick(rctx: RuleContext) -> bool:
+    """control_params demo: count ticks then request_stop."""
+    state = rctx.state
+    state.ticks = int(state.ticks) + 1
+    if state.verbose:
+        log.info("tick %s/%s (%s) mode=%s", state.ticks, state.max_ticks, state.greeting, state.mode)
+    if state.ticks >= int(state.max_ticks):
+        log.info("达到 max_ticks，调用 ctx.request_stop()（不会触发关机）")
+        rctx.studio.request_stop()
+    return True

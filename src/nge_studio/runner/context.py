@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import threading
 from datetime import UTC, datetime
+from typing import Any
 
 
 class ScriptStopped(Exception):
@@ -13,13 +14,14 @@ class ScriptStopped(Exception):
 class RunContext:
     """Thread-safe cooperative control signals for a script entry."""
 
-    def __init__(self) -> None:
+    def __init__(self, *, script_params: dict[str, Any] | None = None) -> None:
         self._lock = threading.RLock()
         self._paused = False
         self._stop = False
         self._pause_event = threading.Event()
         self._pause_event.set()
         self.started_at = datetime.now(UTC)
+        self.script_params: dict[str, Any] = dict(script_params or {})
 
     def set_paused(self, paused: bool) -> None:
         with self._lock:
@@ -30,6 +32,7 @@ class RunContext:
                 self._pause_event.set()
 
     def request_stop(self) -> None:
+        """Script- or Studio-initiated cooperative stop."""
         with self._lock:
             self._stop = True
             self._paused = False

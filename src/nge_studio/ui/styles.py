@@ -74,6 +74,19 @@ QLabel#brandLabel {
 QLabel#hintLabel {
   color: #94a3b8;
 }
+QLabel#columnHeading {
+  color: #7dd3fc;
+  font-size: 14px;
+  font-weight: 700;
+}
+QSplitter::handle {
+  background-color: #243049;
+  width: 2px;
+}
+QSplitter::handle:hover,
+QSplitter::handle:pressed {
+  background-color: #3d6ea8;
+}
 QGroupBox {
   border: 1px solid #243049;
   border-radius: 6px;
@@ -85,6 +98,8 @@ QGroupBox::title {
   left: 10px;
   padding: 0 4px;
   color: #7dd3fc;
+  font-size: 14px;
+  font-weight: 700;
 }
 QStatusBar {
   background: #070d18;

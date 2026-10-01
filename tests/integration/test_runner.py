@@ -77,14 +77,90 @@ def run(engine, ctx):
 """
     script = _script(tmp_path, body)
     engines: list[FakeEngine] = []
+    shutdown_calls: list[int] = []
 
     def factory(params, script_dir):
         eng = FakeEngine()
         engines.append(eng)
         return eng
 
-    runner = ScriptRunner(engine_factory=factory)
-    runner.start(script, LaunchParameters(resource_dir=".", run_duration_sec=0.2))
+    runner = ScriptRunner(
+        engine_factory=factory,
+        shutdown_executor=lambda: shutdown_calls.append(1),
+    )
+    runner.start(
+        script,
+        LaunchParameters(resource_dir=".", run_duration_sec=0.2, duration_end_action="none"),
+    )
     time.sleep(0.8)
     assert runner.state == RunState.IDLE
     assert engines and engines[0].closed
+    assert shutdown_calls == []
+
+
+def test_script_request_stop_no_shutdown(tmp_path: Path) -> None:
+    body = """
+import time
+def run(engine, ctx):
+    assert ctx.script_params.get("n") == 7
+    time.sleep(0.05)
+    ctx.request_stop()
+    while not ctx.should_stop():
+        time.sleep(0.01)
+"""
+    script = _script(tmp_path, body)
+    engines: list[FakeEngine] = []
+    shutdown_calls: list[int] = []
+
+    def factory(params, script_dir):
+        eng = FakeEngine()
+        engines.append(eng)
+        return eng
+
+    runner = ScriptRunner(
+        engine_factory=factory,
+        shutdown_executor=lambda: shutdown_calls.append(1),
+    )
+    runner.start(
+        script,
+        LaunchParameters(resource_dir=".", duration_end_action="shutdown"),
+        script_params={"n": 7},
+    )
+    time.sleep(0.5)
+    assert runner.state == RunState.IDLE
+    assert engines and engines[0].closed
+    assert shutdown_calls == []
+
+
+def test_timeout_shutdown_calls_executor(tmp_path: Path) -> None:
+    body = """
+import time
+def run(engine, ctx):
+    while not ctx.should_stop():
+        time.sleep(0.05)
+"""
+    script = _script(tmp_path, body)
+    engines: list[FakeEngine] = []
+    shutdown_calls: list[int] = []
+
+    def factory(params, script_dir):
+        eng = FakeEngine()
+        engines.append(eng)
+        return eng
+
+    runner = ScriptRunner(
+        engine_factory=factory,
+        shutdown_executor=lambda: shutdown_calls.append(1),
+    )
+    runner.start(
+        script,
+        LaunchParameters(
+            resource_dir=".",
+            run_duration_sec=0.2,
+            duration_end_action="shutdown",
+        ),
+    )
+    time.sleep(0.8)
+    assert runner.state == RunState.IDLE
+    assert engines and engines[0].closed
+    assert shutdown_calls == [1]
