@@ -6,7 +6,15 @@ import json
 from pathlib import Path
 from typing import Any
 
-from nge_studio.catalog.models import CAPTURE_CHOICES, GameManifest, LaunchParameters, Manifest
+from nge_studio.catalog.models import (
+    CAPTURE_CHOICES,
+    SCRIPT_PARAM_ID_RE,
+    SCRIPT_PARAM_TYPES,
+    GameManifest,
+    LaunchParameters,
+    Manifest,
+    ScriptParamField,
+)
 
 
 class CatalogValidationError(Exception):
@@ -16,9 +24,76 @@ class CatalogValidationError(Exception):
         super().__init__(f"{self.path}: {reason}")
 
 
-_MANIFEST_TOP = frozenset({"display_name", "description", "defaults"})
+_MANIFEST_TOP = frozenset({"display_name", "description", "defaults", "script_params"})
 _GAME_MANIFEST_TOP = frozenset({"display_name", "description"})
 _DEFAULT_KEYS = frozenset(f.name for f in LaunchParameters.__dataclass_fields__.values())  # type: ignore[attr-defined]
+_SCRIPT_PARAM_KEYS = frozenset({"id", "type", "label", "default", "choices"})
+
+
+def parse_script_params(raw: Any, *, source: Path) -> list[ScriptParamField]:
+    if raw is None:
+        return []
+    if not isinstance(raw, list):
+        raise CatalogValidationError(source, "script_params 必须是数组")
+    seen: set[str] = set()
+    fields_out: list[ScriptParamField] = []
+    for i, item in enumerate(raw):
+        prefix = f"script_params[{i}]"
+        if not isinstance(item, dict):
+            raise CatalogValidationError(source, f"{prefix} 必须是对象")
+        unk = set(item) - _SCRIPT_PARAM_KEYS
+        if unk:
+            raise CatalogValidationError(source, f"{prefix} 含未知字段: {sorted(unk)}")
+        pid = item.get("id")
+        if not isinstance(pid, str) or not SCRIPT_PARAM_ID_RE.match(pid):
+            raise CatalogValidationError(
+                source,
+                f"{prefix}.id 必须是合法标识符（字母/下划线开头）",
+            )
+        if pid in seen:
+            raise CatalogValidationError(source, f"script_params id 重复: {pid}")
+        seen.add(pid)
+        ptype = item.get("type")
+        if ptype not in SCRIPT_PARAM_TYPES:
+            raise CatalogValidationError(
+                source,
+                f"{prefix}.type 非法: {ptype!r}（允许 {sorted(SCRIPT_PARAM_TYPES)}）",
+            )
+        label = item.get("label")
+        if label is not None and not isinstance(label, str):
+            raise CatalogValidationError(source, f"{prefix}.label 必须是字符串")
+        choices = item.get("choices")
+        if ptype == "choice":
+            if not isinstance(choices, list) or not choices:
+                raise CatalogValidationError(source, f"{prefix}.choices 必须是非空字符串数组")
+            if not all(isinstance(c, str) for c in choices):
+                raise CatalogValidationError(source, f"{prefix}.choices 元素必须是字符串")
+        elif choices is not None:
+            raise CatalogValidationError(source, f"{prefix}.choices 仅允许 type=choice")
+        default = item.get("default")
+        if ptype == "choice" and default is not None and default not in choices:
+            raise CatalogValidationError(
+                source,
+                f"{prefix}.default 必须落在 choices 内",
+            )
+        if ptype == "bool" and default is not None and not isinstance(default, bool):
+            raise CatalogValidationError(source, f"{prefix}.default 必须是布尔值")
+        if ptype == "int" and default is not None and not isinstance(default, int):
+            raise CatalogValidationError(source, f"{prefix}.default 必须是整数")
+        if ptype == "number" and default is not None and not isinstance(default, (int, float)):
+            raise CatalogValidationError(source, f"{prefix}.default 必须是数字")
+        if ptype == "string" and default is not None and not isinstance(default, str):
+            raise CatalogValidationError(source, f"{prefix}.default 必须是字符串")
+        fields_out.append(
+            ScriptParamField(
+                id=pid,
+                type=ptype,
+                label=label,
+                default=default,
+                choices=list(choices) if isinstance(choices, list) else None,
+            )
+        )
+    return fields_out
 
 
 def parse_manifest(data: dict[str, Any], *, source: Path) -> Manifest:
@@ -46,7 +121,13 @@ def parse_manifest(data: dict[str, Any], *, source: Path) -> Manifest:
         raise CatalogValidationError(source, "display_name 必须是字符串")
     if desc is not None and not isinstance(desc, str):
         raise CatalogValidationError(source, "description 必须是字符串")
-    return Manifest(display_name=display, description=desc, defaults=defaults)
+    script_params = parse_script_params(data.get("script_params"), source=source)
+    return Manifest(
+        display_name=display,
+        description=desc,
+        defaults=defaults,
+        script_params=script_params,
+    )
 
 
 def load_manifest_file(path: Path) -> Manifest:

@@ -1,4 +1,4 @@
 {
   "display_name": "演示",
-  "description": "样例与冒烟脚本所在游戏"
+  "description": "样例：smoke 冒烟；control_params 演示 script_params / request_stop"
 }

@@ -12,6 +12,7 @@ from nge_studio.catalog.models import LaunchParameters, Script
 from nge_studio.runner.context import RunContext
 from nge_studio.runner.engine_factory import EngineFactory, default_engine_factory
 from nge_studio.runner.loader import load_run_callable
+from nge_studio.runner.shutdown import ShutdownExecutor, windows_forced_shutdown
 
 log = logging.getLogger("nge.studio.runner")
 
@@ -36,18 +37,21 @@ class ScriptRunner:
         on_error: Callable[[str], None] | None = None,
         on_hung: Callable[[], None] | None = None,
         on_finished: Callable[[], None] | None = None,
+        shutdown_executor: ShutdownExecutor | None = None,
     ) -> None:
         self._engine_factory = engine_factory or default_engine_factory
         self._on_state = on_state
         self._on_error = on_error
         self._on_hung = on_hung
         self._on_finished = on_finished
+        self._shutdown_executor = shutdown_executor or windows_forced_shutdown
         self._lock = threading.RLock()
         self._state = RunState.IDLE
         self._thread: threading.Thread | None = None
         self._ctx: RunContext | None = None
         self._timeout_timer: threading.Timer | None = None
         self._script_key: str | None = None
+        self._duration_end_action: str = "none"
 
     @property
     def state(self) -> RunState:
@@ -59,13 +63,19 @@ class ScriptRunner:
         with self._lock:
             return self._script_key
 
-    def start(self, script: Script, params: LaunchParameters) -> None:
+    def start(
+        self,
+        script: Script,
+        params: LaunchParameters,
+        script_params: dict[str, Any] | None = None,
+    ) -> None:
         with self._lock:
             if self._state != RunState.IDLE:
                 raise RuntimeError("已有脚本在运行，同一时间只能运行一个")
             params.validate_for_start()
-            self._ctx = RunContext()
+            self._ctx = RunContext(script_params=script_params)
             self._script_key = script.key
+            self._duration_end_action = params.duration_end_action or "none"
             self._set_state_unlocked(RunState.RUNNING)
             self._thread = threading.Thread(
                 target=self._worker,
@@ -110,11 +120,19 @@ class ScriptRunner:
                 self._on_hung()
 
     def _on_timeout(self) -> None:
-        log.info("Studio 运行时长超时，正在结束")
+        with self._lock:
+            action = self._duration_end_action
+        log.info("Studio 运行时长超时，正在结束（end_action=%s）", action)
         try:
             self.stop()
         except Exception:
             log.exception("超时结束失败")
+        if action == "shutdown":
+            try:
+                log.info("执行 duration_end_action=shutdown")
+                self._shutdown_executor()
+            except Exception:
+                log.exception("关机执行失败")
 
     def _worker(self, script: Script, params: LaunchParameters, ctx: RunContext) -> None:
         engine: Any = None
@@ -145,6 +163,7 @@ class ScriptRunner:
                 self._thread = None
                 self._ctx = None
                 self._script_key = None
+                self._duration_end_action = "none"
                 self._set_state_unlocked(RunState.IDLE)
             if self._on_finished:
                 self._on_finished()

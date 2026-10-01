@@ -37,6 +37,13 @@ def test_checkpoint_raises_on_stop() -> None:
         ctx.checkpoint()
 
 
+def test_script_params_attached() -> None:
+    ctx = RunContext(script_params={"loops": 2, "flag": True})
+    assert ctx.script_params == {"loops": 2, "flag": True}
+    ctx.script_params["loops"] = 5
+    assert ctx.script_params["loops"] == 5
+
+
 def test_stop_unblocks_pause() -> None:
     ctx = RunContext()
     ctx.set_paused(True)
