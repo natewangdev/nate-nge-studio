@@ -85,6 +85,8 @@ QGroupBox::title {
   left: 10px;
   padding: 0 4px;
   color: #7dd3fc;
+  font-size: 14px;
+  font-weight: 700;
 }
 QStatusBar {
   background: #070d18;

@@ -11,8 +11,8 @@ from PySide6.QtWidgets import (
     QDoubleSpinBox,
     QFileDialog,
     QFormLayout,
+    QGroupBox,
     QHBoxLayout,
-    QLabel,
     QLineEdit,
     QPushButton,
     QSpinBox,
@@ -55,11 +55,9 @@ class ParamForm(QWidget):
         self.pick_btn = _row_button("点选窗口")
         self.window_title = QLineEdit()
         self.window_title.setPlaceholderText("可选；无 hwnd 时按标题包含匹配第一个窗口")
-        self.hwnd_title = QLabel("")
-        self.hwnd_title.setObjectName("hintLabel")
         self.capture = QComboBox()
         self.capture.addItems(["dxcam", "mss"])
-        self.humanize = QCheckBox("拟人化移动")
+        self.humanize = QCheckBox()
         self.humanize.setChecked(True)
         self.control_mode = QSpinBox()
         self.control_mode.setRange(0, 10)
@@ -81,34 +79,31 @@ class ParamForm(QWidget):
 
         self._script_fields: list[ScriptParamField] = []
         self._script_widgets: dict[str, QWidget] = {}
-        self._script_heading = QLabel("脚本参数")
-        self._script_heading.setObjectName("sectionHeading")
-        self._script_host = QWidget()
-        self._script_form = QFormLayout(self._script_host)
-        self._script_form.setContentsMargins(0, 0, 0, 0)
 
-        form = QFormLayout()
-        form.addRow(
+        self.launch_group = QGroupBox("启动参数")
+        launch_form = QFormLayout(self.launch_group)
+        launch_form.addRow(
             "资源目录 resource_dir",
             _input_with_button(self.resource_dir, self.resource_browse),
         )
-        form.addRow("窗口标题 window_title", self.window_title)
-        form.addRow("窗口句柄 hwnd", _input_with_button(self.hwnd, self.pick_btn))
-        form.addRow("", self.hwnd_title)
-        form.addRow("截屏 capture", self.capture)
-        form.addRow("", self.humanize)
-        form.addRow("控制模式 control_mode", self.control_mode)
-        form.addRow("日志目录 log_dir", _input_with_button(self.log_dir, self.log_browse))
-        form.addRow("YOLO 模型", _input_with_button(self.yolo_model, self.yolo_model_browse))
-        form.addRow("YOLO names", _input_with_button(self.yolo_names, self.yolo_names_browse))
-        form.addRow("OCR kwargs", self.ocr_kwargs)
-        form.addRow("运行时长(小时)", self.run_duration)
-        form.addRow("时长结束后", self.duration_end_action)
+        launch_form.addRow("窗口标题 window_title", self.window_title)
+        launch_form.addRow("窗口句柄 hwnd", _input_with_button(self.hwnd, self.pick_btn))
+        launch_form.addRow("截屏 capture", self.capture)
+        launch_form.addRow("拟人化移动", self.humanize)
+        launch_form.addRow("控制模式 control_mode", self.control_mode)
+        launch_form.addRow("日志目录 log_dir", _input_with_button(self.log_dir, self.log_browse))
+        launch_form.addRow("YOLO 模型", _input_with_button(self.yolo_model, self.yolo_model_browse))
+        launch_form.addRow("YOLO names", _input_with_button(self.yolo_names, self.yolo_names_browse))
+        launch_form.addRow("OCR kwargs", self.ocr_kwargs)
+        launch_form.addRow("运行时长(小时)", self.run_duration)
+        launch_form.addRow("时长结束后", self.duration_end_action)
+
+        self.script_group = QGroupBox("脚本参数")
+        self._script_form = QFormLayout(self.script_group)
 
         layout = QVBoxLayout(self)
-        layout.addLayout(form)
-        layout.addWidget(self._script_heading)
-        layout.addWidget(self._script_host)
+        layout.addWidget(self.launch_group)
+        layout.addWidget(self.script_group)
         layout.addWidget(self.reset_btn)
 
         self.resource_browse.clicked.connect(self._browse_resource_dir)
@@ -169,9 +164,7 @@ class ParamForm(QWidget):
         self._script_fields = []
 
     def _refresh_script_section_visibility(self) -> None:
-        visible = bool(self._script_fields)
-        self._script_heading.setVisible(visible)
-        self._script_host.setVisible(visible)
+        self.script_group.setVisible(bool(self._script_fields))
 
     def set_script_param_schema(
         self,
@@ -249,8 +242,8 @@ class ParamForm(QWidget):
     def set_parameters(self, params: LaunchParameters, *, picked_title: str = "") -> None:
         self.resource_dir.setText(params.resource_dir or "")
         self.hwnd.setText("" if params.hwnd is None else str(params.hwnd))
-        self.window_title.setText(params.window_title or "")
-        self.hwnd_title.setText(picked_title or params.window_title or "")
+        title = picked_title or params.window_title or ""
+        self.window_title.setText(title)
         idx = self.capture.findText(params.capture)
         self.capture.setCurrentIndex(max(0, idx))
         self.humanize.setChecked(bool(params.humanize))
@@ -311,5 +304,4 @@ class ParamForm(QWidget):
 
     def set_hwnd(self, hwnd: int, title: str) -> None:
         self.hwnd.setText(str(hwnd))
-        self.hwnd_title.setText(title)
         self.window_title.setText(title)
