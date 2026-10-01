@@ -97,7 +97,6 @@ class MainWindow(QMainWindow):
         center = QWidget()
         center.setMinimumWidth(240)
         center_l = QVBoxLayout(center)
-        center_l.addWidget(QLabel("启动参数"))
         center_l.addWidget(self.params, stretch=1)
         center_l.addLayout(controls)
 
