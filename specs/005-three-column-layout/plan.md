@@ -8,6 +8,8 @@
 
 Rebuild the main window as a horizontal three-pane splitter (catalog | params+controls | live logs) with default stretch **2:3:3**, and persist/restore `QSplitter` sizes via an additive `ui.main_splitter_sizes` field in the existing settings JSON.
 
+**Amendment (2026-10-02)**: Left column is catalog-only (remove in-column brand/tagline). Right column uses non-GroupBox live-log chrome (`实时日志` heading + panel). Align tops of the three columns’ primary content. Style main `QSplitter` handles as thin contrasting lines with brighter hover (FR-009–FR-012). Center parameter GroupBoxes remain per 007.
+
 ## Technical Context
 
 **Language/Version**: Python 3.11+
@@ -24,7 +26,8 @@ Rebuild the main window as a horizontal three-pane splitter (catalog | params+co
 
 **Performance Goals**: Debounced save on splitter move; no impact on log throughput
 
-**Constraints**: Backward compatible settings; invalid sizes → default 2:3:3; keep brand above catalog
+**Constraints**: Backward compatible settings; invalid sizes → default 2:3:3; left catalog-only; right log non-GroupBox; column content tops aligned; visible thin splitter handles
+
 
 **Scale/Scope**: Single main window layout change
 
@@ -47,7 +50,9 @@ specs/005-three-column-layout/
   contracts/ui-layout-settings.md
 src/nge_studio/
   settings/store.py          # AppSettings.ui + load/save
-  ui/main_window.py          # three-column splitter
+  ui/main_window.py          # three-column splitter + chrome
+  ui/styles.py               # splitter handle + column heading
+  ui/widgets/param_form.py   # zero outer margins for top alignment
 tests/unit/test_settings_store.py  # splitter sizes cases
 ```
 

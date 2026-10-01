@@ -63,11 +63,6 @@ class MainWindow(QMainWindow):
         self._splitter_save_timer.setInterval(300)
         self._splitter_save_timer.timeout.connect(self._persist_splitter_sizes)
 
-        brand = QLabel("NGE-STUDIO")
-        brand.setObjectName("brandLabel")
-        hint = QLabel("游戏脚本管理 · 基于 NGE2")
-        hint.setObjectName("hintLabel")
-
         self.catalog = CatalogPanel()
         self.params = ParamForm()
         self.logs = LogPanel()
@@ -87,23 +82,32 @@ class MainWindow(QMainWindow):
         controls.addStretch(1)
         controls.addWidget(self.status)
 
+        # Shared top inset so catalog / launch GroupBox / log heading share one line
+        # (QGroupBox::title uses margin-top: 10px in APP_QSS).
+        column_top = 10
+        column_side = 6
+
         left = QWidget()
         left.setMinimumWidth(160)
         left_l = QVBoxLayout(left)
-        left_l.addWidget(brand)
-        left_l.addWidget(hint)
+        left_l.setContentsMargins(column_side, column_top, column_side, column_side)
         left_l.addWidget(self.catalog, stretch=1)
 
         center = QWidget()
         center.setMinimumWidth(240)
         center_l = QVBoxLayout(center)
+        center_l.setContentsMargins(column_side, column_top, column_side, column_side)
         center_l.addWidget(self.params, stretch=1)
         center_l.addLayout(controls)
+
+        log_heading = QLabel("实时日志")
+        log_heading.setObjectName("columnHeading")
 
         right = QWidget()
         right.setMinimumWidth(240)
         right_l = QVBoxLayout(right)
-        right_l.addWidget(QLabel("实时日志"))
+        right_l.setContentsMargins(column_side, column_top, column_side, column_side)
+        right_l.addWidget(log_heading)
         right_l.addWidget(self.logs, stretch=1)
 
         self._main_splitter = QSplitter()

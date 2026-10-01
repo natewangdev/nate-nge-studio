@@ -102,6 +102,7 @@ class ParamForm(QWidget):
         self._script_form = QFormLayout(self.script_group)
 
         layout = QVBoxLayout(self)
+        layout.setContentsMargins(0, 0, 0, 0)
         layout.addWidget(self.launch_group)
         layout.addWidget(self.script_group)
         layout.addWidget(self.reset_btn)
