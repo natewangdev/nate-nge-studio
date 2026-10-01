@@ -33,8 +33,8 @@ packages = ["src/nge_studio"]
 [tool.hatch.build.targets.wheel.force-include]
 "game_scripts" = "game_scripts"
 
-# [tool.uv.sources]
-# nate-game-engine = { path = "../nate-game-engine", editable = true }
+[tool.uv.sources]
+nate-game-engine = { path = "../nate-game-engine", editable = true }
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

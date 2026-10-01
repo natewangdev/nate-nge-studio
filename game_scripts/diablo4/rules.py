@@ -3,56 +3,46 @@
 from __future__ import annotations
 
 import logging
-import time
 
 import common
 
 from nge_studio.rules import RuleContext
 
-log = logging.getLogger("nge.diablo4.rules")
+log = logging.getLogger("nge.d4.rules")
 
-def form_dungeon_party(ctx: RuleContext) -> bool:
-    ctx.engine.control.key_click("o")
+def goto_team(ctx: RuleContext) -> bool:
+    if (ctx.state.STATE != common.GameState.NOT_IN_PARTY):
+        return False
+    
+    engine = ctx.engine
+    engine.control.key_click("o")
 
-    time.sleep(0.35)
-
-    match = ctx.engine.find.find_image(
-        common.FRIEND_LIST_TEMPLATE,
+    match = engine.find.find_image(
+        common.FRIEND_LIST_FILTER_IMAGE,
         threshold=0.85,
         region=common.FRIEND_LIST_REGION,
+        timeout_ms=5000,
     )
     if match is None:
-        log.info("form_dungeon_party: 未找到好友列表模板")
-        ctx.engine.control.key_click("esc")
+        log.error("组队rule: 5秒内未找到好友列表过滤图片")
         return False
 
-    lines = ctx.engine.ocr.recognize(region=common.FRIEND_LIST_REGION, min_score=0.4)
-    texts = [str(ln.text).strip() for ln in lines]
-    hit = next(
-        (
-            ln
-            for ln in lines
-            if (t := str(ln.text).strip())
-            and (t == ctx.state.FRIEND_NAME or ctx.state.FRIEND_NAME in t)
-        ),
-        None,
-    )
-    if hit is None:
-        log.info("form_dungeon_party: 未识别到「%s」（OCR=%s）", ctx.state.FRIEND_NAME, texts)
-        ctx.engine.control.key_click("esc")
+    match = engine.ocr.find_text(ctx.state.FRIEND_NAME,region=common.FRIEND_LIST_REGION)
+    if match is None:
         return False
-
-    ctx.engine.control.move_and_click(hit.x, hit.y)
-    log.info(
-        "form_dungeon_party: 已点击「%s」(%.0f, %.0f) OCR=%s",
-        ctx.state.FRIEND_NAME,
-        hit.x,
-        hit.y,
-        texts,
-    )
     return True
 
 
 def fallback_behavior(ctx: RuleContext) -> bool:
-    log.info("fallback_behavior: 这是一个兜底行为")
-    return True
+    engine = ctx.engine
+    match = engine.find.find_image(common.MAKE_PERSON_IMAGE, threshold=0.7)
+    if match is not None:
+        engine.control.move_and_click(match.x, match.y)
+        return True
+    
+    match = engine.find.find_image(common.REBORN_IMAGE, threshold=0.7)
+    if match is not None:
+        engine.control.move_and_click(match.x, match.y)
+        return True
+    
+    return False
