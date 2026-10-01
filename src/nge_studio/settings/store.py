@@ -135,16 +135,36 @@ class SettingsStore:
             return None
         return LaunchParameters.from_dict(params)
 
+    def get_script_params_overlay(
+        self,
+        settings: AppSettings,
+        script_key: str,
+    ) -> dict[str, Any] | None:
+        entry = settings.launch_configs.get(script_key)
+        if not entry:
+            return None
+        raw = entry.get("script_params")
+        if not isinstance(raw, dict):
+            return None
+        return dict(raw)
+
     def set_launch_overlay(
         self,
         settings: AppSettings,
         script_key: str,
         params: LaunchParameters,
+        script_params: dict[str, Any] | None = None,
     ) -> None:
-        settings.launch_configs[script_key] = {
+        prev = settings.launch_configs.get(script_key) or {}
+        entry: dict[str, Any] = {
             "updated_at": datetime.now(UTC).isoformat(timespec="seconds"),
             "parameters": params.to_dict(),
         }
+        if script_params is not None:
+            entry["script_params"] = dict(script_params)
+        elif isinstance(prev.get("script_params"), dict):
+            entry["script_params"] = dict(prev["script_params"])
+        settings.launch_configs[script_key] = entry
 
     @staticmethod
     def _validate_hotkeys(hotkeys: dict[str, dict[str, Any]]) -> None:
