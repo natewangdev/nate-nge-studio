@@ -34,3 +34,10 @@ logs/
 packaging/dist/
 packaging/build/
 *.spec.bak
+
+# game_scripts: only track demo/; ignore all other games and files
+game_scripts/*
+!game_scripts/demo/
+!game_scripts/demo/**
+# re-ignore caches under demo (negation above would otherwise include them)
+game_scripts/demo/**/__pycache__/

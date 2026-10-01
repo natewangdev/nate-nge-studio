@@ -64,6 +64,16 @@
 - 对话框起始目录：当前 `resource_dir` 非空且存在时用其；否则用户主目录。
 - 选择后：若路径位于 `resource_dir` 下则存相对路径；否则存绝对路径。
 
+**启动时路径解析**（runner / 引擎工厂）：
+
+| 字段 | 相对路径含义 | 绝对路径 |
+|------|--------------|----------|
+| `resource_dir` | 相对**脚本目录**拼接后 resolve | 按给定路径 resolve |
+| `log_dir` | 相对**已解析的 `resource_dir`** 拼接后 resolve | 按给定路径 resolve |
+| `yolo_model` / `yolo_names` | 按 NGE2：相对 `resource_dir` | 按给定 |
+
+**不得**把相对 `log_dir` 接到脚本目录上（否则日志会落在 `main.py` 旁，而不是操作者选定的资源目录下）。
+
 ### LaunchConfiguration（持久化覆盖）
 
 | 字段 | 类型 | 规则 |

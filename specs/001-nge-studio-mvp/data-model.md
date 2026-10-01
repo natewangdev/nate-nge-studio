@@ -64,6 +64,16 @@ Author-facing NGE2 construction fields + Studio timeout.
 - Dialog start directory: current `resource_dir` if non-empty and exists; else user home.
 - After pick: store path relative to `resource_dir` when under that directory; else absolute.
 
+**Start path resolution** (runner / engine factory):
+
+| Field | Relative value means | Absolute |
+|-------|----------------------|----------|
+| `resource_dir` | Join to **script directory**, then resolve | Resolve as given |
+| `log_dir` | Join to **resolved `resource_dir`**, then resolve | Resolve as given |
+| `yolo_model` / `yolo_names` | Per NGE2: relative to `resource_dir` | As given |
+
+Do **not** join relative `log_dir` to the script directory (that would place logs next to `main.py` instead of under the operator’s resource folder).
+
 ### LaunchConfiguration (persisted overlay)
 
 | Field | Type | Rules |
