@@ -17,7 +17,7 @@ uv run ruff check src/nge_studio/ui/main_window.py src/nge_studio/settings/store
 uv run nge-studio
 ```
 
-1. Confirm three columns: catalog | params+controls | logs; default ≈ 2:3:3.
+1. Confirm three columns: catalog (no left-rail brand/tagline) | params+controls | **实时日志** heading + panel (not GroupBox); content tops aligned; thin visible splitters (brighter on hover); default ≈ 2:3:3.
 2. Drag splitters; quit; reopen — widths restored.
 3. Start `demo/smoke` — logs stream on the **right**.
 
