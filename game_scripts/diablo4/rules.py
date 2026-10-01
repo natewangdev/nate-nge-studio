@@ -24,16 +24,21 @@ def goto_team(ctx: RuleContext) -> bool:
         timeout_ms=5000,
     )
     if match is None:
-        log.error("组队rule: 5秒内未找到好友列表过滤图片")
+        log.error("5秒内未找到好友列表过滤图片")
         return False
 
     match = engine.ocr.find_text(ctx.state.FRIEND_NAME,region=common.FRIEND_LIST_REGION)
     if match is None:
-        return False
+        log.info(f"未找到好友{ctx.state.FRIEND_NAME}")
+    else:
+        log.info(f"找到好友{ctx.state.FRIEND_NAME}")
+    
+    engine.control.key_click("o")
     return True
 
 
 def fallback_behavior(ctx: RuleContext) -> bool:
+    log.info("进入兜底行为")
     engine = ctx.engine
     match = engine.find.find_image(common.MAKE_PERSON_IMAGE, threshold=0.7)
     if match is not None:

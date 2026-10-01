@@ -15,17 +15,17 @@ if TYPE_CHECKING:
 
     from nge_studio.runner.context import RunContext
 
-log = logging.getLogger("nge.diablo4.red-door")
+log = logging.getLogger("nge.d4.red-door")
 
 TARGET_MAP_NAME = "憎恨大厅"
 
 @dataclass
 class FSM:
     STATE: common.GameState = common.GameState.NOT_IN_PARTY
-    FRIEND_NAME: str = "路西法"
+    FRIEND_NAME: str = ""
 
 loop = RuleLoop(one_action_per_tick=True, tick_interval_sec=0.25)
-loop.add_rule(rules.goto_team, name="goto_team", priority=30, cooldown=5.0)
+loop.add_rule(rules.goto_team, name="goto_team", priority=30, cooldown=10.0)
 loop.add_rule(rules.fallback_behavior, name="fallback_behavior", priority=0, cooldown=1.0)
 
 @loop.rule(name="click_bag_close", priority=20, cooldown=0.8)
@@ -37,6 +37,11 @@ def town_press_i(ctx: RuleContext) -> bool:
     return True
 
 def run(engine: NGE2, ctx: RunContext) -> None:
-    log.info("脚本启动 (engine=%s)", type(engine).__name__)
-    loop.run(engine, ctx, state=FSM())
+    friend_name = str(ctx.script_params.get("friend_name", "路西法"))
+    log.info(
+        "脚本启动 (engine=%s) friend_name=%s",
+        type(engine).__name__,
+        friend_name,
+    )
+    loop.run(engine, ctx, state=FSM(FRIEND_NAME=friend_name))
     log.info("脚本结束")
