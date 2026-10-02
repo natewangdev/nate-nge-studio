@@ -9,20 +9,31 @@ log = logging.getLogger("nge.diablo4.common")
 FRIEND_LIST_REGION = (1057, 76, 1579, 828)
 # 副本/主城 名称识别区域
 MAP_NAME_REGION = (1343,1,1514,33)
-
-
 # 好友列表过滤图片
 FRIEND_LIST_FILTER_IMAGE = "images/好友列表.png"
 # 制作人员图片
 MAKE_PERSON_IMAGE = "images/制作人员.png"
 # 在存档点重生图片
 REBORN_IMAGE = "images/在存档点重生.png"
+# 加入小队图片
+JOIN_PARTY_IMAGE = "images/加入小队.png"
+# 小队已满-接受图片
+FULL_PARTY_ACCEPT_IMAGE = "images/小队已满-接受.png"
+# 立即转移图片
+IMMEDIATE_TRANSFER_IMAGE = "images/立即转移.png"
+# 传送至队长-接受图片
+TELEPORT_TO_LEADER_ACCEPT_IMAGE = "images/传送至队长-接受.png"
+# 离开小队图片
+LEAVE_PARTY_IMAGE = "images/离开小队.png"
+# 离开队伍-接受图片
+LEAVE_PARTY_ACCEPT_IMAGE = "images/离开小队-接受.png"
 
 class GameState(StrEnum):
     """暗黑破坏神 IV 脚本共用游戏状态。"""
 
     NOT_IN_PARTY = "未组队"
-    IN_PARTY = "已组队"
+    TELEPORT = "传送"
+    LEAVE_PARTY = "离开队伍"
     DUNGEON_MAP = "副本跑图"
     DUNGEON_COMBAT = "副本打怪"
     CHECK_BAG = "检查背包"
