@@ -39,5 +39,8 @@ packaging/build/
 game_scripts/*
 !game_scripts/demo/
 !game_scripts/demo/**
+!game_scripts/diablo4/
+!game_scripts/diablo4/**
 # re-ignore caches under demo (negation above would otherwise include them)
 game_scripts/demo/**/__pycache__/
+game_scripts/diablo4/**/__pycache__/
