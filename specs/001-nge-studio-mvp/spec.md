@@ -59,7 +59,7 @@ An operator opens NGE-STUDIO and sees the games and scripts that were included w
 1. **Given** a packaged build that includes at least one game with one valid script (entry + manifest), **When** the operator opens the catalog, **Then** the game and script appear with the manifest display name (falling back to folder ID if display name missing).
 2. **Given** a script directory missing a required manifest or unified entry, **When** packaging/catalog validation runs, **Then** the entire package/build fails with a clear error that identifies the offending path.
 3. **Given** a new script folder was added under an existing game in source, **When** the operator runs an older build that was packaged before that addition, **Then** the new script does **not** appear until a rebuild/repackage includes it.
-4. **Given** multiple games each with multiple scripts, **When** the operator browses the catalog, **Then** items are grouped by game and each script is selectable independently.
+4. **Given** multiple games each with multiple scripts, **When** the operator browses the catalog, **Then** items are grouped by game and each script is selectable independently. Relative order of game groups and of scripts within a group is specified in [`../008-catalog-sort-order/spec.md`](../008-catalog-sort-order/spec.md) (not operator-chosen).
 
 ---
 
@@ -162,7 +162,7 @@ A maintainer produces a Windows executable build of NGE-STUDIO that includes the
 - **FR-001**: System MUST present a modern, tech-oriented visual desktop UI on Windows for managing NGE2 game scripts.
 - **FR-002**: System MUST discover games/scripts from a conventional source tree of the form `game_scripts/<game_id>/<script_id>/` at build/package time (and in development via the same catalog rules used for packaging).
 - **FR-003**: Each script directory MUST include a `manifest` file and a unified entry module; packaging/catalog validation MUST fail the entire build if any discovered script directory violates the documented protocol or manifest rules (clear error naming the path).
-- **FR-004**: Manifest MUST support at least: display name, optional description, and optional default launch parameter values. Game ID and script ID MUST be the folder names.
+- **FR-004**: Manifest MUST support at least: display name, optional description, and optional default launch parameter values. Game ID and script ID MUST be the folder names. Optional catalog `sort_order` on game and script manifests is specified in [`../008-catalog-sort-order/spec.md`](../008-catalog-sort-order/spec.md).
 - **FR-005**: Selecting a script MUST allow configuring the full NGE2 construction parameter surface: `resource_dir`, `hwnd`, `window_title`, `capture`, `humanize`, `control_mode`, `log_dir`, `yolo_model`, `yolo_names`, `ocr_kwargs`, plus Studio run-duration timeout. `hwnd` and `window_title` MUST each be optional. When both are empty, Start MUST still be allowed with NGE2 screen-absolute coordinate semantics.
 - **FR-005a**: `resource_dir` and `log_dir` MUST each provide a text input and a Browse control that opens a **folder** dialog; values MAY also be typed manually.
 - **FR-005b**: `yolo_model` and `yolo_names` MUST each provide a text input and a Browse control that opens a **file** dialog (suggested filters: model `*.onnx`; names `*.names` and `*.txt`; plus All files). `ocr_kwargs` MUST remain editable JSON text and MUST NOT offer a file Browse control.
@@ -214,6 +214,7 @@ A maintainer produces a Windows executable build of NGE-STUDIO that includes the
 - “Full NGE2 construction parameters” means the documented public constructor fields intended for authors; internal factory hooks (`capture_factory`, `transport_factory`, `ocr_factory`, `yolo_factory`) are advanced/testing knobs and are **out of MVP UI** unless a later clarification includes them.
 - `hwnd` and/or `window_title` may be left empty at Start; when both empty, behavior matches NGE2 unbound-window (screen-absolute) semantics. When only title is set, Studio resolves hwnd before construct; when hwnd is set, hwnd wins.
 - Game-level `common.py` / `rules.py` are author conventions for shared code within a game folder; they are not catalog entries.
+- Left-column catalog **order** of games and scripts is maintainer-authored metadata (`sort_order`); see feature `008`. This MVP spec only requires grouping and independent selection.
 - `ocr_kwargs` is exposed as an advanced structured field (JSON text) rather than a large dedicated form or file picker in MVP.
 - Path browse UX (folders for `resource_dir`/`log_dir`, files for YOLO fields, relative-when-under-`resource_dir`, home fallback) applies to the launch-parameter form. At Start, relative `log_dir` is joined to resolved `resource_dir` (FR-005h), aligning stored relative paths with engine log location.
 - Run-duration **display unit is hours**; the canonical stored field remains `run_duration_sec` in manifests and settings for backward compatibility.

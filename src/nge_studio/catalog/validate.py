@@ -24,10 +24,19 @@ class CatalogValidationError(Exception):
         super().__init__(f"{self.path}: {reason}")
 
 
-_MANIFEST_TOP = frozenset({"display_name", "description", "defaults", "script_params"})
-_GAME_MANIFEST_TOP = frozenset({"display_name", "description"})
+_MANIFEST_TOP = frozenset({"display_name", "description", "defaults", "script_params", "sort_order"})
+_GAME_MANIFEST_TOP = frozenset({"display_name", "description", "sort_order"})
 _DEFAULT_KEYS = frozenset(f.name for f in LaunchParameters.__dataclass_fields__.values())  # type: ignore[attr-defined]
 _SCRIPT_PARAM_KEYS = frozenset({"id", "type", "label", "default", "choices"})
+
+
+def parse_sort_order(data: dict[str, Any], *, source: Path) -> int | None:
+    if "sort_order" not in data:
+        return None
+    value = data["sort_order"]
+    if isinstance(value, bool) or not isinstance(value, int):
+        raise CatalogValidationError(source, "sort_order 必须是整数")
+    return value
 
 
 def parse_script_params(raw: Any, *, source: Path) -> list[ScriptParamField]:
@@ -127,6 +136,7 @@ def parse_manifest(data: dict[str, Any], *, source: Path) -> Manifest:
         description=desc,
         defaults=defaults,
         script_params=script_params,
+        sort_order=parse_sort_order(data, source=source),
     )
 
 
@@ -152,7 +162,11 @@ def parse_game_manifest(data: dict[str, Any], *, source: Path) -> GameManifest:
         raise CatalogValidationError(source, "display_name 必须是字符串")
     if desc is not None and not isinstance(desc, str):
         raise CatalogValidationError(source, "description 必须是字符串")
-    return GameManifest(display_name=display, description=desc)
+    return GameManifest(
+        display_name=display,
+        description=desc,
+        sort_order=parse_sort_order(data, source=source),
+    )
 
 
 def load_game_manifest_file(path: Path) -> GameManifest | None:

@@ -12,6 +12,7 @@ File: `game_scripts/<game_id>/<script_id>/manifest.json` (UTF-8 JSON object).
 {
   "display_name": "string (optional)",
   "description": "string (optional)",
+  "sort_order": 0,
   "defaults": {
     "resource_dir": "string (optional)",
     "hwnd": null,
@@ -34,6 +35,7 @@ File: `game_scripts/<game_id>/<script_id>/manifest.json` (UTF-8 JSON object).
 |-------|----------|-------|
 | `display_name` | no | Empty/missing → UI shows `script_id` |
 | `description` | no | Free text |
+| `sort_order` | no | JSON integer if present (not bool/float/`null`). Catalog list order: see `specs/008-catalog-sort-order/contracts/sort-order.md`. Missing → omitted group |
 | `defaults` | no | Object; unknown keys → validate **fail** (strict) |
 | `defaults.capture` | no | Only `"dxcam"` or `"mss"` if present |
 | `defaults.hwnd` | no | `null` or non-negative int |

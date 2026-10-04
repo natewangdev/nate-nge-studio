@@ -1,6 +1,7 @@
 {
   "display_name": "控制参数示例",
   "description": "演示 script_params、ctx.request_stop；时长结束后的「关机」请在 Studio 表单「时长结束后」选择（仅超时生效）",
+  "sort_order": 2,
   "defaults": {
     "resource_dir": ".",
     "capture": "dxcam",

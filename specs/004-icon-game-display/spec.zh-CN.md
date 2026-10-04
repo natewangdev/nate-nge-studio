@@ -8,7 +8,7 @@
 
 **输入**：用户描述：「为工具添加符合“脚本”主题的应用图标；为游戏目录增加 `display_name`（对齐现有脚本 manifest 模式）。」
 
-**权威说明**：英文版 [`spec.md`](./spec.md) 为 Spec Kit 执行权威。本文件为中文对照。产品基线见 [`../001-nge-studio-mvp/spec.md`](../001-nge-studio-mvp/spec.md)。
+**权威说明**：英文版 [`spec.md`](./spec.md) 为 Spec Kit 执行权威。本文件为中文对照。产品基线见 [`../001-nge-studio-mvp/spec.md`](../001-nge-studio-mvp/spec.md)。游戏与脚本的目录**显示顺序**见 [`../008-catalog-sort-order/spec.md`](../008-catalog-sort-order/spec.md)。
 
 ## 澄清记录
 
@@ -71,7 +71,7 @@
 - **FR-003**：打包后的 Windows 可执行文件**必须**嵌入/使用同一产品图标，使资源管理器与启动界面显示该图标。
 - **FR-004**：图标主题**必须**传达「脚本」/ 脚本化自动化含义（而非空白通用标记）。具体画稿由实现/资产决定，只要在窗口、任务栏与 exe 上可辨认即可。
 - **FR-005**：目录发现**必须**支持可选的游戏级元数据文件 `game_scripts/<game_id>/manifest.json`。
-- **FR-006**：游戏级 `manifest.json` 若存在，**必须**允许可选字符串 `display_name`。空或缺失时 UI **必须**显示 `game_id`。本功能契约可另列可选字段（至少 `display_name`；可选 `description` 可与脚本对齐，但非 UI 验收必需）。
+- **FR-006**：游戏级 `manifest.json` 若存在，**必须**允许可选字符串 `display_name`。空或缺失时 UI **必须**显示 `game_id`。其余可选字段**必须**限于游戏 manifest 已文档化项（`display_name`；可选 `description` 以与脚本对齐；可选 `sort_order` 见 [`../008-catalog-sort-order/spec.md`](../008-catalog-sort-order/spec.md)）。其他键仍禁止。
 - **FR-007**：缺少游戏级 `manifest.json` **不得**单独导致目录校验失败；UI **必须**对该游戏显示 `game_id`。
 - **FR-008**：若游戏级 `manifest.json` 存在但损坏或违反已文档化规则，打包/目录校验**必须**使整次构建失败，并清晰指明路径（与 001 脚本 manifest 失败策略一致）。
 - **FR-009**：目录 UI **必须**用解析后的游戏显示名（`display_name` 或回退 `game_id`）展示游戏分组。脚本行标签仍由脚本 manifest 驱动（同 001）。
@@ -81,7 +81,7 @@
 ### 关键实体
 
 - **游戏（Game）**：`game_scripts` 下由 `game_id` 标识的文件夹；可选游戏级 `manifest.json`；分组脚本；向 UI 暴露解析后的 `display_name`。
-- **游戏 Manifest**：可选的游戏元数据（`display_name`，若文档化则可含 `description`）；不含启动 `defaults`（仍仅属脚本）。
+- **游戏 Manifest**：可选的游戏元数据（`display_name`，可选 `description`，以及 008 规定的可选 `sort_order`）；不含启动 `defaults`（仍仅属脚本）。
 - **脚本 Manifest**：不变——位于 `game_scripts/<game_id>/<script_id>/manifest.json`。
 - **产品图标**：NGE-STUDIO 的脚本主题视觉标识，用于窗口、任务栏与打包 exe。
 
@@ -99,7 +99,7 @@
 
 - 图标画稿在实现本功能时提供/制作并纳入仓库；操作者不上传自定义图标。
 - 「脚本主题」指清晰传达脚本/自动化的桌面工具视觉线索；细则留给实现，只要满足 FR-001–FR-004。
-- 游戏 `manifest.json` 不携带启动默认值；默认值仍只在脚本 manifest 中。
+- 游戏 `manifest.json` 不携带启动默认值；默认值仍只在脚本 manifest 中。可选 `sort_order` 由功能 `008` 规定，不由本功能的显示名规则规定。
 - 仓库样例游戏可补充中英文 `display_name` 以提升可读性；这是内容，不是新的本地化系统。
 - 目录树内的每游戏/每脚本图标不在范围内。
 - 托盘图标、安装器品牌与网站 favicon 不在范围内（除非已由上述窗口/任务栏/exe 表面覆盖）。

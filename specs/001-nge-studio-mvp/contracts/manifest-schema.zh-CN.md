@@ -12,6 +12,7 @@
 {
   "display_name": "string (optional)",
   "description": "string (optional)",
+  "sort_order": 0,
   "defaults": {
     "resource_dir": "string (optional)",
     "hwnd": null,
@@ -34,6 +35,7 @@
 |------|------|------|
 | `display_name` | 否 | 空/缺失 → UI 显示 `script_id` |
 | `description` | 否 | 自由文本 |
+| `sort_order` | 否 | 若出现须为 JSON 整数（非布尔/浮点/`null`）。目录列表顺序见 `specs/008-catalog-sort-order/contracts/sort-order.md`。缺失 → 省略组 |
 | `defaults` | 否 | 对象；未知键 → 校验**失败**（严格） |
 | `defaults.capture` | 否 | 若存在仅允许 `"dxcam"` 或 `"mss"` |
 | `defaults.hwnd` | 否 | `null` 或非负整数 |
