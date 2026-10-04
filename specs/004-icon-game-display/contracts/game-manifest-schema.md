@@ -11,7 +11,8 @@ Distinct from script manifests at `game_scripts/<game_id>/<script_id>/manifest.j
 ```json
 {
   "display_name": "string (optional)",
-  "description": "string (optional)"
+  "description": "string (optional)",
+  "sort_order": 0
 }
 ```
 
@@ -21,6 +22,7 @@ Distinct from script manifests at `game_scripts/<game_id>/<script_id>/manifest.j
 |-------|----------|-------|
 | `display_name` | No | Empty/missing → UI shows `game_id` |
 | `description` | No | Free text; catalog may ignore for v1 label |
+| `sort_order` | No | JSON integer if present. Catalog game order: `specs/008-catalog-sort-order/contracts/sort-order.md` |
 | `defaults` | **Forbidden** | Launch defaults belong on script manifests only |
 | Other keys | **Forbidden** | Strict: unknown key → catalog validation fails |
 
@@ -35,6 +37,7 @@ Distinct from script manifests at `game_scripts/<game_id>/<script_id>/manifest.j
 ```json
 {
   "display_name": "演示游戏",
-  "description": "样例与冒烟脚本所在游戏"
+  "description": "样例与冒烟脚本所在游戏",
+  "sort_order": 1
 }
 ```

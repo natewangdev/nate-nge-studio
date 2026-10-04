@@ -99,3 +99,80 @@ def test_game_manifest_invalid_json_fails(tmp_path: Path) -> None:
     (tmp_path / "g1" / "manifest.json").write_text("{not-json", encoding="utf-8")
     with pytest.raises(CatalogValidationError):
         validate_catalog_tree(tmp_path)
+
+
+def test_sort_order_explicit_before_omitted_and_ascending(tmp_path: Path) -> None:
+    _write_script(tmp_path, "zeta", "s1", manifest=VALID_MANIFEST, main=VALID_MAIN)
+    _write_script(tmp_path, "alpha", "s1", manifest=VALID_MANIFEST, main=VALID_MAIN)
+    (tmp_path / "zeta" / "manifest.json").write_text('{"sort_order": 1}', encoding="utf-8")
+    games = discover_catalog(tmp_path)
+    assert [g.game_id for g in games] == ["zeta", "alpha"]
+
+
+def test_sort_order_scripts_per_game(tmp_path: Path) -> None:
+    _write_script(
+        tmp_path,
+        "g1",
+        "b_script",
+        manifest='{"display_name":"B","sort_order":1}',
+        main=VALID_MAIN,
+    )
+    _write_script(
+        tmp_path,
+        "g1",
+        "a_script",
+        manifest='{"display_name":"A"}',
+        main=VALID_MAIN,
+    )
+    _write_script(
+        tmp_path,
+        "g1",
+        "c_script",
+        manifest='{"display_name":"C","sort_order":1}',
+        main=VALID_MAIN,
+    )
+    games = discover_catalog(tmp_path)
+    ids = [s.script_id for s in games[0].scripts]
+    assert ids == ["b_script", "c_script", "a_script"]
+
+
+def test_sort_order_missing_ok(tmp_path: Path) -> None:
+    _write_script(tmp_path, "g1", "s1", manifest=VALID_MANIFEST, main=VALID_MAIN)
+    validate_catalog_tree(tmp_path)
+    game = discover_catalog(tmp_path)[0]
+    assert game.manifest is None
+    assert game.scripts[0].manifest.sort_order is None
+
+
+def test_sort_order_float_fails(tmp_path: Path) -> None:
+    _write_script(
+        tmp_path,
+        "g1",
+        "s1",
+        manifest='{"display_name":"T","sort_order":1.5}',
+        main=VALID_MAIN,
+    )
+    with pytest.raises(CatalogValidationError) as ei:
+        validate_catalog_tree(tmp_path)
+    assert "sort_order" in str(ei.value)
+
+
+def test_sort_order_bool_fails(tmp_path: Path) -> None:
+    _write_script(tmp_path, "g1", "s1", manifest=VALID_MANIFEST, main=VALID_MAIN)
+    (tmp_path / "g1" / "manifest.json").write_text('{"sort_order": true}', encoding="utf-8")
+    with pytest.raises(CatalogValidationError) as ei:
+        validate_catalog_tree(tmp_path)
+    assert "sort_order" in str(ei.value)
+
+
+def test_sort_order_null_fails(tmp_path: Path) -> None:
+    _write_script(
+        tmp_path,
+        "g1",
+        "s1",
+        manifest='{"sort_order": null}',
+        main=VALID_MAIN,
+    )
+    with pytest.raises(CatalogValidationError) as ei:
+        validate_catalog_tree(tmp_path)
+    assert "sort_order" in str(ei.value)
