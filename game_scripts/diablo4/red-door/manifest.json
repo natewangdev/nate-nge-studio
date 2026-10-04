@@ -1,6 +1,7 @@
 {
   "display_name": "红门3.0",
   "description": "",
+  "sort_order": 2,
   "defaults": {
     "resource_dir": ".",
     "capture": "dxcam",

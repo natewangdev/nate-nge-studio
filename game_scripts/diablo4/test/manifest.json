@@ -1,6 +1,7 @@
 {
   "display_name": "测试",
   "description": "测试脚本",
+  "sort_order": 1,
   "defaults": {
     "resource_dir": ".",
     "capture": "dxcam",

@@ -5,6 +5,7 @@ import math
 from enum import StrEnum
 
 from nge_studio.rules import RuleContext
+from nge_studio.runner.context import ScriptStopped
 
 log = logging.getLogger("nge.diablo4.common")
 
@@ -43,6 +44,7 @@ class GameState(StrEnum):
     CHECK_BAG = "检查背包"
     DUNGEON_DONE = "副本完成"
     HANDLE_GEAR = "处理装备"
+    LOOT = "拾取物品"
     TEST = "测试"
 
 
@@ -52,7 +54,65 @@ def open_stash(ctx: RuleContext) -> bool:
     return True
 
 
-_CLIENT_EDGE_INSET = 10.0
+def _client_center(engine) -> tuple[float, float]:
+    region = engine.window.client_region
+    if region is None:
+        screen_w, screen_h = engine.control.screen_size
+        return screen_w / 2.0, screen_h / 2.0
+    left, top, right, bottom = (float(v) for v in region.local)
+    return (left + right) / 2.0, (top + bottom) / 2.0
+
+
+def loot(
+    ctx: RuleContext,
+    conf: float = 0.25,
+    max_picks: int = 40,
+) -> None:
+    engine = ctx.engine
+    log.info("【拾取物品】conf=%s max_picks=%s", conf, max_picks)
+    picked = 0
+    try:
+        while picked < max_picks:
+            ctx.studio.checkpoint()
+            dets = engine.yolo.detect(
+                conf=conf,
+                class_ids=[0],
+                timeout_ms=0,
+            )
+            items = [d for d in dets if d.class_id == 0]
+            if not items:
+                if picked:
+                    log.info("【拾取物品】检测不到物品，结束（已拾取 %s 次）", picked)
+                return
+
+            cx, cy = _client_center(engine)
+            nearest = min(
+                items,
+                key=lambda d: math.hypot(d.x - cx, d.y - cy),
+            )
+            dist = math.hypot(nearest.x - cx, nearest.y - cy)
+            log.info(
+                "【拾取物品】最近物品 (%s, %s) dist=%.1f score=%.2f",
+                nearest.x,
+                nearest.y,
+                dist,
+                nearest.score,
+            )
+            engine.control.move(nearest.x, nearest.y)
+            engine.control.key_click("f")
+            picked += 1
+            if dist < 300:
+                delay_ms = 200
+            else:
+                delay_ms = int(round(dist / (100.0 * 5) * 1000))
+            if delay_ms > 0:
+                log.info("【拾取物品】等待 %s 毫秒", delay_ms)
+                engine.time.sleep(delay_ms)
+    except ScriptStopped:
+        log.info("【拾取物品】收到结束信号，中止（已拾取 %s 次）", picked)
+        return
+
+    log.warning("【拾取物品】达到最大拾取次数 %s，停止以免空转", max_picks)
 
 
 def _ray_hit_inset_rect(
@@ -135,7 +195,7 @@ def walk(
                 top,
                 right,
                 bottom,
-                _CLIENT_EDGE_INSET,
+                10.0,
             )
 
     engine.control.move_and_click(x, y, spread=spread)

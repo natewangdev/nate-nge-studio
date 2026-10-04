@@ -24,7 +24,7 @@ class FSM:
 
 loop = RuleLoop(one_action_per_tick=True, tick_interval_sec=0.25)
 
-@loop.rule(name="测试跑图", priority=50, cooldown=0.0)
+# @loop.rule(name="测试跑图", priority=50, cooldown=0.0)
 def test_walk(ctx: RuleContext) -> bool:
     log.info("--------------【测试跑图】---------------")
     common.walk(ctx, -128.4, 365.1, ctx.state.SPEED)
@@ -40,6 +40,15 @@ def test_walk(ctx: RuleContext) -> bool:
     if ctx.state.EXECUTE_ONCE == 1:
         ctx.studio.request_stop()
     return True
+
+@loop.rule(name="测试拾取物品", priority=50, cooldown=0.0)
+def test_walk(ctx: RuleContext) -> bool:
+    log.info("--------------【测试拾取物品】---------------")
+    common.loot(ctx)
+    if ctx.state.EXECUTE_ONCE == 1:
+        ctx.studio.request_stop()
+    return True
+
 
 def run(engine: NGE2, ctx: RunContext) -> None:
     execute_once = int(ctx.script_params.get("execute_once", 1))
