@@ -9,6 +9,12 @@ from nge_studio.catalog.models import Game, Script
 from nge_studio.catalog.validate import load_game_manifest_file, validate_script_dir
 
 
+def _catalog_sort_key(folder_id: str, sort_order: int | None) -> tuple[int, int, str]:
+    if sort_order is None:
+        return (1, 0, folder_id)
+    return (0, sort_order, folder_id)
+
+
 def resolve_catalog_root(explicit: Path | None = None) -> Path:
     if explicit is not None:
         return explicit.resolve()
@@ -61,6 +67,7 @@ def discover_catalog(root: Path | None = None, *, validate: bool = True) -> list
                     manifest=manifest,
                 )
             )
+        scripts.sort(key=lambda s: _catalog_sort_key(s.script_id, s.manifest.sort_order))
         if scripts:
             games.append(
                 Game(
@@ -70,4 +77,10 @@ def discover_catalog(root: Path | None = None, *, validate: bool = True) -> list
                     manifest=game_manifest,
                 )
             )
+    games.sort(
+        key=lambda g: _catalog_sort_key(
+            g.game_id,
+            g.manifest.sort_order if g.manifest is not None else None,
+        )
+    )
     return games

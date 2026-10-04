@@ -88,12 +88,14 @@ class Manifest:
     description: str | None = None
     defaults: LaunchParameters = field(default_factory=LaunchParameters)
     script_params: list[ScriptParamField] = field(default_factory=list)
+    sort_order: int | None = None
 
 
 @dataclass
 class GameManifest:
     display_name: str | None = None
     description: str | None = None
+    sort_order: int | None = None
 
 
 @dataclass

@@ -8,7 +8,7 @@
 
 **Input**: User description: "Add a script-themed application icon; add display_name support for game directories (aligned with existing script manifest patterns)."
 
-**Authority**: Extends catalog/UI product requirements in [`../001-nge-studio-mvp/spec.md`](../001-nge-studio-mvp/spec.md) (US1, FR-002–FR-004, Game entity). Does not change script entry protocol or run orchestration.
+**Authority**: Extends catalog/UI product requirements in [`../001-nge-studio-mvp/spec.md`](../001-nge-studio-mvp/spec.md) (US1, FR-002–FR-004, Game entity). Does not change script entry protocol or run orchestration. Catalog **display order** of games and scripts is specified in [`../008-catalog-sort-order/spec.md`](../008-catalog-sort-order/spec.md).
 
 ## Clarifications
 
@@ -71,7 +71,7 @@ An operator opens the catalog and sees each game grouped with a readable display
 - **FR-003**: The packaged Windows executable MUST embed/use that same product icon so Explorer and launch surfaces show it.
 - **FR-004**: The icon theme MUST communicate “script” / scripted automation (not a generic blank app mark). Exact artwork is an implementation/asset decision so long as the theme is recognizable in the window, taskbar, and exe.
 - **FR-005**: Catalog discovery MUST support an optional game-level metadata file at `game_scripts/<game_id>/manifest.json`.
-- **FR-006**: Game-level `manifest.json`, when present, MUST allow optional `display_name` (string). Empty or missing `display_name` MUST cause the UI to show `game_id`. Additional optional fields MAY be limited to those documented in the game-manifest contract for this feature (at minimum `display_name`; optional `description` MAY be included for parity with script manifests but is not required for UI acceptance).
+- **FR-006**: Game-level `manifest.json`, when present, MUST allow optional `display_name` (string). Empty or missing `display_name` MUST cause the UI to show `game_id`. Additional optional fields MUST be limited to those documented for game manifests (`display_name`; optional `description` for parity with script manifests; optional `sort_order` per [`../008-catalog-sort-order/spec.md`](../008-catalog-sort-order/spec.md)). Other keys remain forbidden.
 - **FR-007**: Absence of game-level `manifest.json` MUST NOT fail catalog validation by itself; the UI MUST show `game_id` for that game.
 - **FR-008**: If game-level `manifest.json` exists but is malformed or violates the documented game-manifest rules, packaging/catalog validation MUST fail the entire build with a clear error naming the path (consistent with script manifest failure policy in 001).
 - **FR-009**: Catalog UI MUST show each game group using the resolved game display name (`display_name` or fallback `game_id`). Script row labels remain driven by script manifests as in 001.
@@ -81,7 +81,7 @@ An operator opens the catalog and sees each game grouped with a readable display
 ### Key Entities
 
 - **Game**: Folder under `game_scripts` identified by `game_id`; optional game-level `manifest.json`; groups scripts; exposes resolved `display_name` for UI.
-- **Game Manifest**: Optional metadata for a game (`display_name`, and optionally `description` if documented); no launch `defaults` (those remain script-only).
+- **Game Manifest**: Optional metadata for a game (`display_name`, optional `description`, optional `sort_order` per 008); no launch `defaults` (those remain script-only).
 - **Script Manifest**: Unchanged — lives under `game_scripts/<game_id>/<script_id>/manifest.json`.
 - **Product Icon**: The branded script-themed visual identity of NGE-STUDIO used for window, taskbar, and packaged executable.
 
@@ -99,7 +99,7 @@ An operator opens the catalog and sees each game grouped with a readable display
 
 - Icon artwork is provided/produced as part of implementing this feature and stored in the repository; operators do not upload custom icons.
 - “Script theme” means a clear visual cue of scripts/automation suitable for a desktop tool; detailed art direction is left to implementation as long as FR-001–FR-004 are met.
-- Game `manifest.json` does not carry launch defaults; launch defaults remain on script manifests only.
+- Game `manifest.json` does not carry launch defaults; launch defaults remain on script manifests only. Optional `sort_order` is specified in feature `008`, not by this feature’s display-name rules.
 - Sample games in-repo MAY gain game manifests with Chinese or English display names for readability; that is content, not a new localization system.
 - Per-game or per-script icons inside the catalog tree are out of scope.
 - Tray/notification-area icons, installer branding, and website favicons are out of scope unless already implied by the Windows exe/window/taskbar surfaces above.

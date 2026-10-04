@@ -15,6 +15,8 @@ class CatalogPanel(QWidget):
         super().__init__(parent)
         self._tree = QTreeWidget()
         self._tree.setHeaderLabels(["游戏 / 脚本"])
+        self._tree.setDragEnabled(False)
+        self._tree.setSortingEnabled(False)
         self._tree.itemSelectionChanged.connect(self._on_selection)
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
