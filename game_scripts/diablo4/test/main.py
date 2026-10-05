@@ -12,7 +12,6 @@ import rules
 
 if TYPE_CHECKING:
     from nge2 import NGE2
-
     from nge_studio.runner.context import RunContext
 
 log = logging.getLogger("nge.d4.test")
@@ -24,24 +23,19 @@ class FSM:
 
 loop = RuleLoop(one_action_per_tick=True, tick_interval_sec=0.25)
 
-# @loop.rule(name="测试跑图", priority=50, cooldown=0.0)
+@loop.rule(name="测试跑图", priority=50, cooldown=0.0)
 def test_walk(ctx: RuleContext) -> bool:
     log.info("--------------【测试跑图】---------------")
-    common.walk(ctx, -128.4, 365.1, ctx.state.SPEED)
-    common.walk(ctx, 135.8, 323.9, ctx.state.SPEED)
-    common.walk(ctx, -118.1, 458.1, ctx.state.SPEED)
-    common.walk(ctx, -55.8, 466.5, ctx.state.SPEED)
-    common.walk(ctx, -51.0, 575.2, ctx.state.SPEED)
-    common.walk(ctx, -20.5, 349.0, ctx.state.SPEED)
-    common.walk(ctx, 5.6, 412.9, ctx.state.SPEED)
-    common.walk(ctx, 36.5, 494.0, ctx.state.SPEED)
-    common.walk(ctx, 51.0, 613.6, ctx.state.SPEED)
-    common.walk(ctx, 50.1, 609.1, ctx.state.SPEED)
+    common.walk(ctx, -104.9, 458.4, ctx.state.SPEED)
+    common.walk(ctx, -48.5, 592.9, ctx.state.SPEED)
+    common.walk(ctx, -31.3, 446.9, ctx.state.SPEED)
+    common.walk(ctx, -66.9, 323.9, ctx.state.SPEED)
+   
     if ctx.state.EXECUTE_ONCE == 1:
         ctx.studio.request_stop()
     return True
 
-@loop.rule(name="测试拾取物品", priority=50, cooldown=0.0)
+# @loop.rule(name="测试拾取物品", priority=50, cooldown=0.0)
 def test_walk(ctx: RuleContext) -> bool:
     log.info("--------------【测试拾取物品】---------------")
     common.loot(ctx)

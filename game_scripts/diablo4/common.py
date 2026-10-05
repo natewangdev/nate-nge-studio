@@ -160,14 +160,12 @@ def walk(
     speed: float = 100.0,
     *,
     spread: float = 0.0,
-) -> bool:
+) -> None:
     engine = ctx.engine
     if distance < 0:
-        log.error("【跑图】distance 必须 >= 0，got %s", distance)
-        return False
+        raise ValueError(f"【跑图】distance 必须 >= 0，got {distance}")
     if speed <= 0:
-        log.error("【跑图】speed 必须 > 0，got %s", speed)
-        return False
+        raise ValueError(f"【跑图】speed 必须 > 0，got {speed}")
 
     region = engine.window.client_region
     rad = math.radians(direction)
@@ -202,6 +200,5 @@ def walk(
     travel = math.hypot(x - center_x, y - center_y)
     delay_ms = int(round(travel / (speed * 3) * 1000))
     if delay_ms > 0:
-        log.info("【跑图】等待 %s 毫秒", delay_ms)
+        log.info("【跑图】移动到点位 (%s, %s) 等待 %s 毫秒", int(round(x)), int(round(y)), delay_ms)
         engine.time.sleep(delay_ms)
-    return True
